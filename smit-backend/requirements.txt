@@ -1,0 +1,10 @@
+fastapi>=0.110.0
+uvicorn[standard]
+pydantic>=2.6.0
+pydantic-settings
+openai-agents
+openai
+SQLAlchemy>=2.0.0
+aiosqlite
+python-multipart
+python-jose[cryptography]

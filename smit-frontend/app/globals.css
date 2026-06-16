@@ -1,0 +1,113 @@
+@import url("https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Syncopate:wght@400;700&family=Michroma&family=Share+Tech+Mono&family=JetBrains+Mono:wght@400;600&family=Space+Mono:wght@400;700&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    box-sizing: border-box;
+  }
+
+  body {
+    background: #0a0a0a;
+    color: #00FF66;
+    font-family: "Space Mono", monospace;
+    overflow-x: hidden;
+  }
+
+  ::selection {
+    background: #00FF66;
+    color: #0a0a0a;
+  }
+
+  ::-webkit-scrollbar {
+    width: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: #0a0a0a;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #00FF66;
+    border-radius: 3px;
+  }
+}
+
+@layer components {
+  .cyber-panel {
+    @apply border border-cyber-green/30 bg-cyber-black-900/80 backdrop-blur-md rounded-none;
+    box-shadow: 0 0 8px rgba(0, 255, 102, 0.15), inset 0 0 8px rgba(0, 255, 102, 0.05);
+  }
+
+  .cyber-panel--thinking {
+    animation: borderFlash 0.8s ease-in-out infinite;
+    box-shadow: 0 0 20px rgba(255, 0, 60, 0.3), inset 0 0 20px rgba(255, 0, 60, 0.1);
+  }
+
+  .cyber-scanline {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .cyber-scanline::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      transparent 0%,
+      rgba(0, 255, 102, 0.03) 50%,
+      transparent 100%
+    );
+    animation: scanLine 4s linear infinite;
+    pointer-events: none;
+  }
+
+  .cyber-text--glitch {
+    animation: glitch 0.3s ease-in-out infinite;
+  }
+
+  .cyber-input {
+    @apply w-full bg-cyber-black border border-cyber-green/30 px-4 py-3 text-cyber-green font-space-mono text-sm;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+
+  .cyber-input:focus {
+    border-color: #00FF66;
+    box-shadow: 0 0 12px rgba(0, 255, 102, 0.3);
+  }
+
+  .cyber-btn {
+    @apply relative inline-flex items-center justify-center px-8 py-3 bg-transparent border border-cyber-green text-cyber-green font-michroma text-sm uppercase tracking-widest;
+    transition: all 0.2s;
+    outline: none;
+  }
+
+  .cyber-btn:hover {
+    background: rgba(0, 255, 102, 0.1);
+    box-shadow: 0 0 20px rgba(0, 255, 102, 0.3);
+  }
+
+  .cyber-btn:active {
+    transform: scale(0.97);
+  }
+
+  .cyber-btn--crimson {
+    border-color: #FF003C;
+    color: #FF003C;
+  }
+
+  .cyber-btn--crimson:hover {
+    background: rgba(255, 0, 60, 0.1);
+    box-shadow: 0 0 20px rgba(255, 0, 60, 0.3);
+  }
+
+  .cyber-link {
+    @apply block cyber-panel p-5 transition-all duration-200;
+  }
+
+  .cyber-link:hover {
+    border-color: rgba(0, 255, 102, 0.6);
+    box-shadow: 0 0 20px rgba(0, 255, 102, 0.15);
+  }
+}
