@@ -16,7 +16,6 @@ from agents.code_review import code_review_agent
 from agents.tutor import tutor_agent
 from agents.rubric import rubric_agent
 from agents.feedback import feedback_agent
-from agents import MODEL
 
 
 def _hash_code(code: str) -> str:
@@ -55,46 +54,42 @@ async def process_submission(submission_id: str, input_data: SubmissionInput) ->
 
     review_result = await Runner.run(
         code_review_agent,
-        input={
+        input=json.dumps({
             "code": input_data.code,
             "language": input_data.language,
             "student_id": input_data.student_id,
             "assignment_name": input_data.assignment_name,
-        },
-        model=MODEL,
+        }),
     )
     cr = review_result.final_output
 
     tutor_result = await Runner.run(
         tutor_agent,
-        input={
+        input=json.dumps({
             "mistakes": [m.model_dump() for m in cr.mistakes],
             "language": input_data.language,
-        },
-        model=MODEL,
+        }),
     )
     tr = tutor_result.final_output
 
     rubric_result = await Runner.run(
         rubric_agent,
-        input={
+        input=json.dumps({
             "code": input_data.code,
             "rubric_id": input_data.rubric_id,
             "mistakes": [m.model_dump() for m in cr.mistakes],
-        },
-        model=MODEL,
+        }),
     )
     rr = rubric_result.final_output
 
     feedback_result = await Runner.run(
         feedback_agent,
-        input={
+        input=json.dumps({
             "student_id": input_data.student_id,
             "mistakes": [m.model_dump() for m in cr.mistakes],
             "score": rr.score,
             "grade": rr.grade,
-        },
-        model=MODEL,
+        }),
     )
     fr = feedback_result.final_output
 

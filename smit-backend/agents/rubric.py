@@ -1,4 +1,5 @@
 from agents import Agent, function_tool
+from agents import MODEL, AgentOutputSchema
 
 from models.schemas import RubricScore
 
@@ -54,6 +55,6 @@ Given the code review result:
 
 Use calculate_score for the numeric evaluation, and grade_to_letter for the final grade mapping.""",
     tools=[calculate_score, grade_to_letter],
-    output_type=RubricScore,
-    model="meta-llama/llama-3.3-70b-instruct",
+    output_type=AgentOutputSchema(RubricScore, strict_json_schema=False),
+    model=MODEL,
 )

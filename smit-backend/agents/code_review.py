@@ -2,6 +2,7 @@ import ast
 import re
 
 from agents import Agent, function_tool
+from agents import MODEL
 
 from models.schemas import CodeReviewResult, MistakeItem
 
@@ -69,5 +70,5 @@ Output a CodeReviewResult with:
 Be thorough but pedagogical. Every mistake should include a helpful description in both English and Roman Urdu.""",
     tools=[parse_ast, run_linter, check_structure],
     output_type=CodeReviewResult,
-    model="meta-llama/llama-3.3-70b-instruct",
+    model=MODEL,
 )

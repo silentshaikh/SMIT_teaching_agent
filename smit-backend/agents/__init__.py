@@ -8,6 +8,8 @@ sys.path = [p for p in sys.path if os.path.abspath(p) != _root]
 
 _our_agents = sys.modules.pop("agents", None)
 import agents as _real_sdk
+# Import submodules while sys.modules["agents"] points to the SDK
+from agents.agent_output import AgentOutputSchema as _AgentOutputSchema
 if _our_agents is not None:
     sys.modules["agents"] = _our_agents
 sys.path.extend(_paths_to_restore)
@@ -16,6 +18,7 @@ Agent = _real_sdk.Agent
 Runner = _real_sdk.Runner
 function_tool = _real_sdk.function_tool
 set_default_openai_client = _real_sdk.set_default_openai_client
+AgentOutputSchema = _AgentOutputSchema
 
 from openai import AsyncOpenAI
 
@@ -27,5 +30,12 @@ _openai_client = AsyncOpenAI(
 )
 set_default_openai_client(_openai_client)
 
-MODEL = "meta-llama/llama-3.3-70b-instruct"
-FALLBACK_MODEL = "anthropic/claude-3-haiku"
+from agents.models.openai_chatcompletions import OpenAIChatCompletionsModel
+
+_model_instance = OpenAIChatCompletionsModel(
+    model="nvidia/nemotron-nano-9b-v2:free",
+    openai_client=_openai_client,
+)
+
+MODEL = _model_instance
+FALLBACK_MODEL = "poolside/laguna-m.1:free"

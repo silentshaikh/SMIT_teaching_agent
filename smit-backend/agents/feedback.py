@@ -1,4 +1,5 @@
 from agents import Agent, function_tool
+from agents import MODEL
 
 from models.schemas import FeedbackOutput
 
@@ -45,5 +46,5 @@ Given the code review, tutor explanation, and rubric score:
 Be constructive and specific. Tailor suggestions to the student's actual mistakes.""",
     tools=[get_student_history, build_plan],
     output_type=FeedbackOutput,
-    model="meta-llama/llama-3.3-70b-instruct",
+    model=MODEL,
 )

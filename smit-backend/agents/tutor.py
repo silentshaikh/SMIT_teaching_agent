@@ -1,4 +1,5 @@
 from agents import Agent, function_tool
+from agents import MODEL
 
 from models.schemas import TutorOutput
 
@@ -56,5 +57,5 @@ Use translate_roman_urdu for common programming terms.
 Be encouraging and supportive - these are beginners learning to code.""",
     tools=[explain_concept, translate_roman_urdu],
     output_type=TutorOutput,
-    model="meta-llama/llama-3.3-70b-instruct",
+    model=MODEL,
 )

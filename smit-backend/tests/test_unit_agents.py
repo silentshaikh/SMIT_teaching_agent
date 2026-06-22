@@ -32,7 +32,7 @@ class TestRubricAgentContract:
     def test_agent_defined(self):
         from agents.rubric import rubric_agent, calculate_score, grade_to_letter
         assert rubric_agent.name == "RubricAgent"
-        assert rubric_agent.output_type == RubricScore
+        assert rubric_agent.output_type.output_type == RubricScore
         assert len(rubric_agent.tools) == 2
         assert calculate_score is not None
         assert grade_to_letter is not None

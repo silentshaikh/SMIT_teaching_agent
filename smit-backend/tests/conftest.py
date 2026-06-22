@@ -4,9 +4,9 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-os.environ["OPENROUTER_API_KEY"] = "test-key"
-os.environ["JWT_SECRET"] = "test-secret"
-os.environ["OPENAI_API_KEY"] = "test-openai"
+os.environ.setdefault("OPENROUTER_API_KEY", "test-key")
+os.environ.setdefault("JWT_SECRET", "test-secret")
+os.environ.setdefault("OPENAI_API_KEY", "test-openai")
 
 import config as cfg
 cfg.settings = cfg.Settings(_env_file=None)

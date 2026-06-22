@@ -14,7 +14,7 @@ router = APIRouter(prefix="/api/v1", tags=["admin"])
 
 
 async def verify_token(authorization: str | None = Header(None)) -> dict:
-    if settings.openai_api_key == "" and settings.openrouter_api_key == "":
+    if settings.jwt_secret == "change-me-to-a-random-secret":
         return {"sub": "dev-mode"}
     if authorization is None:
         raise HTTPException(401, "Missing Authorization header")
