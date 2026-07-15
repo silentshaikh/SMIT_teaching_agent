@@ -34,8 +34,8 @@ export default function RubricsPage() {
   }, [data]);
 
   return (
-    <main className="min-h-screen bg-cyber-black p-4 lg:p-8">
-      <div className="max-w-3xl mx-auto space-y-4">
+    <main className="min-h-screen bg-cyber-black pt-20 pb-12 px-[var(--space-page-x)]">
+      <div className="max-w-3xl mx-auto space-y-6">
         <div ref={headerRef} className="cyber-panel p-6 lg:p-8">
           <div className="flex items-center gap-3 mb-2">
             <span className="inline-block w-2 h-2 bg-cyber-purple animate-pulse-neon" />
@@ -43,7 +43,7 @@ export default function RubricsPage() {
               Node // Rubrics
             </span>
           </div>
-          <h1 className="font-orbitron text-3xl lg:text-4xl font-black uppercase tracking-[0.08em] bg-gradient-to-r from-cyber-green via-cyber-purple to-cyber-green bg-[length:200%_auto] animate-gradient-shift bg-clip-text text-transparent">
+          <h1 className="font-heading text-3xl lg:text-4xl font-black uppercase tracking-[0.08em] bg-gradient-to-r from-cyber-green via-cyber-purple to-cyber-green bg-[length:200%_auto] animate-gradient-shift bg-clip-text text-transparent">
             Grading Rubrics
           </h1>
         </div>

@@ -7,6 +7,7 @@ import { FileUploader } from "@/components/FileUploader";
 export default function SubmitPage() {
   const headerRef = useRef<HTMLDivElement>(null);
   const formRef = useRef<HTMLDivElement>(null);
+  const infoRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const ctx = gsap.context(() => {
@@ -22,13 +23,21 @@ export default function SubmitPage() {
         { y: 0, opacity: 1, duration: 0.4, ease: "power2.out" },
         "-=0.2"
       );
+      if (infoRef.current) {
+        tl.fromTo(
+          infoRef.current,
+          { y: 40, opacity: 0 },
+          { y: 0, opacity: 1, duration: 0.4, ease: "power2.out" },
+          "-=0.3"
+        );
+      }
     });
     return () => ctx.revert();
   }, []);
 
   return (
-    <main className="min-h-screen bg-cyber-black p-4 lg:p-8">
-      <div className="max-w-2xl mx-auto space-y-4">
+    <main className="min-h-screen bg-cyber-black pt-20 pb-12 px-[var(--space-page-x)]">
+      <div className="max-w-6xl mx-auto space-y-6">
         <div ref={headerRef} className="cyber-panel p-6 lg:p-8">
           <div className="flex items-center gap-3 mb-2">
             <span className="inline-block w-2 h-2 bg-cyber-green animate-pulse-neon" />
@@ -36,7 +45,7 @@ export default function SubmitPage() {
               Node // Submit
             </span>
           </div>
-          <h1 className="font-orbitron text-3xl lg:text-4xl font-black uppercase tracking-[0.08em] bg-gradient-to-r from-cyber-green via-cyber-purple to-cyber-green bg-[length:200%_auto] animate-gradient-shift bg-clip-text text-transparent">
+          <h1 className="font-heading font-bold uppercase tracking-[0.08em] bg-gradient-to-r from-cyber-green via-cyber-purple to-cyber-green bg-[length:200%_auto] animate-gradient-shift bg-clip-text text-transparent">
             Submit Assignment
           </h1>
           <p className="font-syncopate text-[10px] text-cyber-green/40 mt-3 tracking-[0.3em] uppercase">
@@ -44,8 +53,36 @@ export default function SubmitPage() {
           </p>
         </div>
 
-        <div ref={formRef} className="cyber-panel p-6 lg:p-8">
-          <FileUploader />
+        <div className="grid md:grid-cols-5 gap-6">
+          <div ref={formRef} className="md:col-span-3 cyber-panel p-6 lg:p-8 animate-on-scroll">
+            <FileUploader />
+          </div>
+
+          <div ref={infoRef} className="md:col-span-2 cyber-panel p-6 lg:p-8 space-y-4">
+            <h3 className="font-heading font-semibold text-cyber-green">Supported Languages</h3>
+            <div className="space-y-2 text-sm text-cyber-green/70">
+              <div className="flex items-center gap-2">
+                <span className="w-2 h-2 bg-yellow-400" />
+                <span>JavaScript (.js)</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="w-2 h-2 bg-blue-400" />
+                <span>Python (.py)</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="w-2 h-2 bg-orange-400" />
+                <span>HTML (.html)</span>
+              </div>
+            </div>
+            <div className="border-t border-cyber-green/10 pt-4">
+              <h4 className="font-heading font-semibold text-cyber-green mb-2">How It Works</h4>
+              <ol className="list-decimal list-inside space-y-1 text-sm text-cyber-green/60">
+                <li>Upload your source code file</li>
+                <li>4 AI agents analyze your code</li>
+                <li>Get instant feedback &amp; score</li>
+              </ol>
+            </div>
+          </div>
         </div>
       </div>
     </main>

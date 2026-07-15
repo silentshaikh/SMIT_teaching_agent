@@ -67,5 +67,3 @@ export interface DashboardStats {
   average_score: number;
   grade_distribution: Record<string, number>;
 }
-
-

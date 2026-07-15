@@ -7,15 +7,23 @@ const config: Config = {
     "./app/**/*.{js,ts,jsx,tsx,mdx}",
   ],
   theme: {
+    screens: {
+      xs: "375px",
+      sm: "640px",
+      md: "768px",
+      lg: "1024px",
+      xl: "1280px",
+      "2xl": "1536px",
+    },
     extend: {
       colors: {
         cyber: {
-          black: "#0a0a0a",
-          "black-900": "#0d0d0d",
-          "black-800": "#121212",
-          "grey": "#1a1a2e",
-          green: "#00FF66",
-          "green-dim": "#00cc52",
+          black: "var(--cyber-bg)",
+          "black-900": "var(--cyber-bg-900)",
+          "black-800": "var(--cyber-bg-900)",
+          grey: "#1a1a2e",
+          green: "var(--cyber-text)",
+          "green-dim": "var(--cyber-text-dim)",
           purple: "#7c3aed",
           "purple-deep": "#4a1a8a",
           crimson: "#FF003C",
@@ -24,6 +32,8 @@ const config: Config = {
         },
       },
       fontFamily: {
+        heading: ["var(--font-heading)", "sans-serif"],
+        body: ["var(--font-body)", "sans-serif"],
         orbitron: ["Orbitron", "monospace"],
         syncopate: ["Syncopate", "sans-serif"],
         michroma: ["Michroma", "sans-serif"],

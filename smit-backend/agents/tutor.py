@@ -1,5 +1,7 @@
-from agents import Agent, function_tool
-from agents import MODEL
+import asyncio
+
+from agents import Agent, Runner, function_tool
+from agents.config import get_model, PRIMARY_MODEL
 
 from models.schemas import TutorOutput
 
@@ -41,6 +43,13 @@ explain_concept = function_tool(_explain_concept)
 translate_roman_urdu = function_tool(_translate_roman_urdu)
 
 
+async def run_tutor(input_data):
+    result = Runner.run(tutor_agent, input=input_data, max_turns=20)
+    if asyncio.iscoroutine(result):
+        result = await result
+    return result.final_output
+
+
 tutor_agent = Agent[None](
     name="TutorAgent",
     instructions="""You are a patient tutor for beginner programming students at SMIT.
@@ -57,5 +66,5 @@ Use translate_roman_urdu for common programming terms.
 Be encouraging and supportive - these are beginners learning to code.""",
     tools=[explain_concept, translate_roman_urdu],
     output_type=TutorOutput,
-    model=MODEL,
+    model=get_model(PRIMARY_MODEL),
 )

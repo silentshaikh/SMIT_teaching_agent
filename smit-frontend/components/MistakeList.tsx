@@ -6,12 +6,12 @@ interface MistakeListProps {
   mistakes: MistakeItem[];
 }
 
-const typeConfig: Record<MistakeType, { border: string; label: string }> = {
-  syntax:    { border: "border-cyber-crimson", label: "SYNTAX" },
-  logic:     { border: "border-orange-500",    label: "LOGIC" },
-  naming:    { border: "border-yellow-500",    label: "NAMING" },
-  structure: { border: "border-cyber-purple",  label: "STRUCTURE" },
-  style:     { border: "border-cyber-cyan",    label: "STYLE" },
+const typeConfig: Record<MistakeType, { border: string; bg: string; label: string }> = {
+  syntax:    { border: "#FF6B6B", bg: "rgba(255,107,107,0.15)", label: "SYNTAX" },
+  logic:     { border: "#FFB347", bg: "rgba(255,179,71,0.15)",  label: "LOGIC" },
+  naming:    { border: "#48CAE4", bg: "rgba(72,202,228,0.15)",  label: "NAMING" },
+  structure: { border: "#9B59B6", bg: "rgba(155,89,182,0.15)",  label: "STRUCTURE" },
+  style:     { border: "#2ECC71", bg: "rgba(46,204,113,0.15)",  label: "STYLE" },
 };
 
 export function MistakeList({ mistakes }: MistakeListProps) {
@@ -29,28 +29,45 @@ export function MistakeList({ mistakes }: MistakeListProps) {
     <div className="space-y-4">
       {mistakes.map((mistake, i) => {
         const cfg = typeConfig[mistake.type];
+        const borderColor = cfg?.border || "#1a1a2e";
+        const badgeBg = cfg?.bg || "rgba(26,26,46,0.15)";
         return (
           <div
             key={i}
-            className={`border-l-4 ${cfg?.border || "border-cyber-grey"} cyber-panel p-4`}
+            className="cyber-panel p-3 sm:p-3.5 lg:p-4"
+            style={{
+              borderLeft: `4px solid ${borderColor}`,
+              borderRadius: "clamp(10px, 1.5vw, 14px)",
+            }}
           >
             <div className="flex items-start justify-between mb-2">
               <div className="flex items-center gap-3">
-                <span className="font-michroma text-[10px] tracking-widest text-cyber-green/80 uppercase">
-                  [{cfg?.label || mistake.type}]
+                <span
+                  className="font-syncopate uppercase tracking-wider font-medium px-2 py-0.5 rounded-full"
+                  style={{
+                    fontSize: "var(--text-xs)",
+                    backgroundColor: badgeBg,
+                    color: borderColor,
+                  }}
+                >
+                  {cfg?.label || mistake.type}
                 </span>
                 {mistake.line !== null && (
-                  <span className="font-space-mono text-[10px] text-cyber-green/40 tracking-wider">
+                  <span className="font-space-mono text-cyber-green/40 tracking-wider" style={{ fontSize: "var(--text-xs)" }}>
                     Ln {mistake.line}
                   </span>
                 )}
               </div>
             </div>
 
-            <p className="font-space-mono text-sm text-cyber-green/80 mb-1">
+            <p className="font-body mb-1" style={{ fontSize: "var(--text-base)", lineHeight: 1.7 }}>
               {mistake.description}
             </p>
-            <p className="font-space-mono text-sm text-cyber-green/50" dir="rtl">
+            <p
+              className="font-body font-medium"
+              dir="rtl"
+              style={{ fontSize: "var(--text-base)", lineHeight: 1.7, marginTop: 4 }}
+            >
               {mistake.description_urdu}
             </p>
 

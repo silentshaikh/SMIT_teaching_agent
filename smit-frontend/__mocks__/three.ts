@@ -1,0 +1,35 @@
+const mockObj = { position: { set: jest.fn(), x: 0, y: 0, z: 0 }, rotation: { set: jest.fn(), x: 0, y: 0, z: 0 }, scale: { set: jest.fn(), x: 1, y: 1, z: 1 } }
+
+module.exports = {
+  __esModule: true,
+  Scene: jest.fn().mockImplementation(() => ({ add: jest.fn(), remove: jest.fn() })),
+  PerspectiveCamera: jest.fn().mockImplementation(() => ({ position: { set: jest.fn() }, lookAt: jest.fn() })),
+  WebGLRenderer: jest.fn().mockImplementation(() => ({
+    setSize: jest.fn(),
+    setPixelRatio: jest.fn(),
+    setClearColor: jest.fn(),
+    domElement: document.createElement('canvas'),
+    render: jest.fn(),
+  })),
+  AmbientLight: jest.fn().mockImplementation(() => ({ ...mockObj })),
+  DirectionalLight: jest.fn().mockImplementation(() => ({ ...mockObj, intensity: 1 })),
+  PointLight: jest.fn().mockImplementation(() => ({ ...mockObj, intensity: 1 })),
+  Mesh: jest.fn().mockImplementation(() => ({ ...mockObj, geometry: {}, material: {} })),
+  IcosahedronGeometry: jest.fn().mockImplementation(() => ({})),
+  SphereGeometry: jest.fn().mockImplementation(() => ({})),
+  MeshStandardMaterial: jest.fn().mockImplementation(() => ({})),
+  PointsMaterial: jest.fn().mockImplementation(() => ({})),
+  Float32BufferAttribute: jest.fn().mockImplementation(() => ({ array: new Float32Array() })),
+  BufferGeometry: jest.fn().mockImplementation(() => ({
+    setAttribute: jest.fn(),
+    setFromPoints: jest.fn(),
+    points: { array: new Float32Array() },
+  })),
+  Points: jest.fn().mockImplementation(() => ({ ...mockObj })),
+  Group: jest.fn().mockImplementation(() => ({ add: jest.fn(), children: [] })),
+  BufferAttribute: jest.fn().mockImplementation(() => ({ array: new Float32Array() })),
+  Clock: jest.fn().mockImplementation(() => ({ getElapsedTime: jest.fn(() => 0), getDelta: jest.fn(() => 0) })),
+  MathUtils: { lerp: jest.fn((a, b, t) => a + (b - a) * t) },
+  Color: jest.fn().mockImplementation(() => ({ r: 1, g: 1, b: 1 })),
+  Vector3: jest.fn().mockImplementation(() => ({ x: 0, y: 0, z: 0 })),
+}

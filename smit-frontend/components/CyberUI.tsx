@@ -1,11 +1,10 @@
 "use client";
-
 import { useEffect, useRef, useState, useCallback } from "react";
 import Link from "next/link";
+import dynamic from "next/dynamic";
 import gsap from "gsap";
-import { AICore } from "./AICore";
-import { CyberHeader } from "./CyberHeader";
-import { CyberFooter } from "./CyberFooter";
+
+const HeroScene = dynamic(() => import("./HeroScene"), { ssr: false });
 
 const CHARS = "!<>-_\\/[]{}—=+*^?#$%@&|~`";
 
@@ -90,14 +89,12 @@ export function CyberUI({ children }: CyberUIProps) {
   const irisInnerRef = useRef<HTMLDivElement>(null);
 
   // Segments (revealed in order)
-  const headerSlotRef = useRef<HTMLDivElement>(null);
   const corePanelRef = useRef<HTMLDivElement>(null);
   const titleRef = useRef<HTMLHeadingElement>(null);
   const subtitleRef = useRef<HTMLParagraphElement>(null);
   const taglineRef = useRef<HTMLParagraphElement>(null);
   const ctaRef = useRef<HTMLDivElement>(null);
   const statusRef = useRef<HTMLDivElement>(null);
-  const footerSlotRef = useRef<HTMLDivElement>(null);
 
   const title = "SMIT // AI TEACHING CORE";
   const subtitle = ">> AGENTIC CODE ANALYSIS ENGINE // v4.2.1 /* REV-93 */";
@@ -149,15 +146,7 @@ export function CyberUI({ children }: CyberUIProps) {
       // === SEGMENTED REVEAL — INDUSTRIAL SNAP ===
       const segments = gsap.timeline({ defaults: { ease: "back.out(3.5)" } });
 
-      // 1. Header
-      segments.fromTo(
-        headerSlotRef.current,
-        { y: -60, opacity: 0 },
-        { y: 0, opacity: 1, duration: 0.35 },
-        "-=0.1"
-      );
-
-      // 2. Core panel — elastic whip
+      // 1. Core panel — elastic whip
       segments.fromTo(
         corePanelRef.current,
         { x: "-120%", rotation: 25, opacity: 0 },
@@ -212,14 +201,6 @@ export function CyberUI({ children }: CyberUIProps) {
       // 7. Status bar — hard stop
       segments.to(statusRef.current, { opacity: 1, duration: 0.08, ease: "none" }, "-=0.1");
 
-      // 8. Footer
-      segments.fromTo(
-        footerSlotRef.current,
-        { y: 30, opacity: 0 },
-        { y: 0, opacity: 1, duration: 0.25, ease: "power3.out" },
-        "-=0.05"
-      );
-
       // === STAGGERED OVERCLOCK on the CTA links ===
       if (ctaRef.current) {
         const links = ctaRef.current.querySelectorAll("a");
@@ -262,7 +243,7 @@ export function CyberUI({ children }: CyberUIProps) {
         >
           <div className="absolute inset-0 flex flex-col items-center justify-center">
             <div className="border border-cyber-green/30 px-12 py-8 text-center"
-              style={{ boxShadow: "0 0 40px rgba(0,255,102,0.15), inset 0 0 40px rgba(0,255,102,0.05)" }}
+              style={{ boxShadow: "0 0 40px var(--cyber-shadow), inset 0 0 40px var(--cyber-shadow-inset)" }}
             >
               <span
                 ref={irisInnerRef}
@@ -290,32 +271,19 @@ export function CyberUI({ children }: CyberUIProps) {
         </div>
       </div>
 
-      {/* === HEADER === */}
-      <div ref={headerSlotRef} className="relative z-20">
-        <CyberHeader />
-      </div>
-
       {/* === MAIN CONTENT === */}
-      <div className="relative z-10 flex-1 flex flex-col lg:flex-row p-4 lg:p-8 gap-4 lg:gap-8 max-w-7xl mx-auto w-full">
-        {/* Left: AI Core */}
+      <div className="relative z-10 flex-1 flex flex-col lg:flex-row pt-20 lg:pt-24 pb-4 lg:pb-8 px-[var(--space-page-x)] gap-4 lg:gap-8 max-w-7xl mx-auto w-full">
+        {/* Left: 3D Computer Scene */}
         <div ref={corePanelRef} className="flex-1 flex flex-col gap-4">
-          <div className="cyber-panel p-2 lg:p-3 flex-1 relative overflow-hidden min-h-[280px] lg:min-h-0">
+          <div className="cyber-panel p-2 lg:p-3 flex-1 relative overflow-hidden min-h-[400px] lg:min-h-[500px]">
             <div className="absolute top-2 left-3 z-10 flex items-center gap-2">
               <span className="inline-block w-1.5 h-1.5 bg-cyber-green" />
               <span className="font-michroma text-[7px] lg:text-[8px] tracking-[0.4em] text-cyber-green/25 uppercase">
                 Core // Live
               </span>
             </div>
-            <div className="h-full pt-5">
-              {bootDone && (
-                <AICore
-                  thinking={thinking}
-                  mouseX={mouse.x}
-                  mouseY={mouse.y}
-                  mouseVelX={mouseVel.x}
-                  mouseVelY={mouseVel.y}
-                />
-              )}
+            <div className="absolute inset-0 pt-5">
+              {bootDone && <HeroScene />}
             </div>
           </div>
 
@@ -345,9 +313,9 @@ export function CyberUI({ children }: CyberUIProps) {
           <div className="cyber-panel p-6 lg:p-10">
             <h1
               ref={titleRef}
-              className="font-orbitron text-4xl md:text-5xl lg:text-7xl font-black uppercase tracking-[0.04em] leading-[1.05]"
+              className="font-heading text-4xl md:text-5xl lg:text-7xl font-black uppercase tracking-[0.04em] leading-[1.05]"
               style={{
-                color: "#00FF66",
+                color: "var(--cyber-text)",
                 textShadow: "2px 0 rgba(255,0,60,0.3), -1px 0 rgba(0,240,255,0.2)",
               }}
             >
@@ -367,14 +335,14 @@ export function CyberUI({ children }: CyberUIProps) {
                 ref={taglineRef}
                 className="font-space-mono text-sm lg:text-base text-cyber-green/60 tracking-[0.1em] uppercase leading-relaxed mb-8"
                 style={{
-                  textShadow: "0 0 20px rgba(0,255,102,0.1)",
+                  textShadow: "0 0 20px var(--cyber-shadow)",
                 }}
               >
                 Deploy source code for instant<br />
                 <span
                   className="font-syncopate font-black tracking-[0.25em]"
                   style={{
-                    color: "#00FF66",
+                    color: "var(--cyber-text)",
                     textShadow: "1px 0 #FF003C, -1px 0 #00f0ff",
                   }}
                 >
@@ -403,11 +371,6 @@ export function CyberUI({ children }: CyberUIProps) {
             </div>
           </div>
         </div>
-      </div>
-
-      {/* === FOOTER === */}
-      <div ref={footerSlotRef}>
-        <CyberFooter />
       </div>
 
       {children && (

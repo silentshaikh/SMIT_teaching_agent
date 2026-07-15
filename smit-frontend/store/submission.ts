@@ -9,11 +9,13 @@ interface SubmissionState {
   report: AssignmentReport | null;
   error: string | null;
   originalCode: string;
+  language: string;
   setSubmissionId: (id: string | null) => void;
   setStatus: (status: SubmissionStatus) => void;
   setReport: (report: AssignmentReport | null) => void;
   setError: (error: string | null) => void;
   setOriginalCode: (code: string) => void;
+  setLanguage: (language: string) => void;
   reset: () => void;
 }
 
@@ -23,6 +25,7 @@ const initialState = {
   report: null,
   error: null,
   originalCode: "",
+  language: "javascript",
 };
 
 export const useSubmissionStore = create<SubmissionState>((set) => ({
@@ -32,5 +35,6 @@ export const useSubmissionStore = create<SubmissionState>((set) => ({
   setReport: (report) => set({ report }),
   setError: (error) => set({ error }),
   setOriginalCode: (originalCode) => set({ originalCode }),
+  setLanguage: (language) => set({ language }),
   reset: () => set(initialState),
 }));

@@ -1,5 +1,5 @@
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 
 from sqlalchemy import Column, String, Integer, DateTime, Text, ForeignKey, JSON
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
@@ -16,7 +16,7 @@ class StudentModel(Base):
     name: Mapped[str] = mapped_column(String(128))
     email: Mapped[str] = mapped_column(String(256))
     batch: Mapped[str] = mapped_column(String(64))
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc))
 
     submissions = relationship("SubmissionModel", back_populates="student")
 
@@ -30,7 +30,7 @@ class SubmissionModel(Base):
     language: Mapped[str] = mapped_column(String(32))
     code_hash: Mapped[str] = mapped_column(String(64))
     status: Mapped[str] = mapped_column(String(32), default="pending")
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc))
 
     student = relationship("StudentModel", back_populates="submissions")
     report = relationship("ReportModel", back_populates="submission", uselist=False)
@@ -45,7 +45,7 @@ class ReportModel(Base):
     grade: Mapped[str] = mapped_column(String(4))
     report_json: Mapped[str] = mapped_column(Text)
     processing_ms: Mapped[int] = mapped_column(Integer)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc))
 
     submission = relationship("SubmissionModel", back_populates="report")
 

@@ -62,7 +62,7 @@ class TestOrchestratorContract:
                 result.scalars.return_value.all.return_value = []
                 return result
 
-            async def add(self, obj):
+            def add(self, obj):
                 obj.id = "test-id"
 
             async def commit(self):
@@ -113,7 +113,10 @@ class TestOrchestratorContract:
             )
 
             uid = "123e4567-e89b-12d3-a456-426614174000"
-            report = await process_submission(uid, input_data)
+
+            with patch("agents.orchestrator._calculate_score", return_value=85), \
+                 patch("agents.orchestrator._grade_to_letter", return_value="B"):
+                report = await process_submission(uid, input_data)
 
             assert isinstance(report, AssignmentReport)
             assert str(report.submission_id) == uid
@@ -135,7 +138,7 @@ class TestOrchestratorCallsAllAgents:
                 result.scalar_one.return_value = m
                 return result
 
-            async def add(self, obj):
+            def add(self, obj):
                 pass
 
             async def commit(self):

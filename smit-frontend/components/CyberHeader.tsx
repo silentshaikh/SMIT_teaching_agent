@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useRef } from "react";
 import gsap from "gsap";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 const navLinks = [
   { href: "/submit", label: "Submit" },
@@ -79,6 +80,7 @@ export function CyberHeader() {
               v4.2.1
             </span>
           </span>
+          <ThemeToggle />
         </nav>
       </div>
     </header>

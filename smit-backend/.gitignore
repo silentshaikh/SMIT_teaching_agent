@@ -1,5 +1,12 @@
-.pytest_cache
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+.coverage
+smit.db
+server_err.log
+server_out.log
 .env
-
-
-
+*.egg-info/
+dist/
+build/

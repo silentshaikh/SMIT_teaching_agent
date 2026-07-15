@@ -11,12 +11,15 @@ interface ScoreRevealProps {
 
 export function ScoreReveal({ score, grade, breakdown }: ScoreRevealProps) {
   const containerRef = useRef<HTMLDivElement>(null);
+  const circleRef = useRef<SVGCircleElement>(null);
   const scoreRef = useRef<HTMLSpanElement>(null);
   const gradeRef = useRef<HTMLSpanElement>(null);
   const tagsRef = useRef<HTMLDivElement>(null);
+  const ctxRef = useRef<gsap.Context | null>(null);
 
   useEffect(() => {
     const el = containerRef.current;
+    const circle = circleRef.current;
     const scoreEl = scoreRef.current;
     const gradeEl = gradeRef.current;
     const tagsEl = tagsRef.current;
@@ -30,27 +33,34 @@ export function ScoreReveal({ score, grade, breakdown }: ScoreRevealProps) {
         observer.disconnect();
 
         const counter = { value: 0 };
-        const ctx = gsap.context(() => {
+        ctxRef.current = gsap.context(() => {
           const tl = gsap.timeline({ defaults: { ease: "back.out(3)" } });
 
-          tl.to(el, { scale: 1, opacity: 1, rotation: 0, duration: 0.5 })
-            .to(
-              counter,
-              {
-                value: score,
-                duration: 0.8,
-                ease: "power3.out",
-                onUpdate: () => {
-                  scoreEl.textContent = String(Math.round(counter.value));
-                },
+          tl.to(el, { scale: 1, opacity: 1, rotation: 0, duration: 0.5 });
+
+          if (circle) {
+            const r = parseFloat(circle.getAttribute("r") || "44");
+            const circumference = 2 * Math.PI * r;
+            gsap.fromTo(
+              circle,
+              { strokeDashoffset: circumference },
+              { strokeDashoffset: circumference - (score / 100) * circumference, duration: 1.8, ease: "power2.out", delay: 0.3 }
+            );
+          }
+
+          tl.to(
+            counter,
+            {
+              value: score,
+              duration: 0.8,
+              ease: "power3.out",
+              onUpdate: () => {
+                scoreEl.textContent = String(Math.round(counter.value));
               },
-              "-=0.3"
-            )
-            .to(
-              gradeEl,
-              { opacity: 1, y: 0, duration: 0.25 },
-              "-=0.3"
-            )
+            },
+            "-=1.5"
+          )
+            .to(gradeEl, { opacity: 1, y: 0, duration: 0.25 }, "-=0.3")
             .fromTo(
               tagsEl.children,
               { opacity: 0, y: 8 },
@@ -58,14 +68,16 @@ export function ScoreReveal({ score, grade, breakdown }: ScoreRevealProps) {
               "-=0.1"
             );
         }, el);
-
-        return () => ctx.revert();
       },
       { threshold: 0.3 }
     );
 
     observer.observe(el);
-    return () => observer.disconnect();
+    return () => {
+      observer.disconnect();
+      ctxRef.current?.revert();
+      ctxRef.current = null;
+    };
   }, [score, grade, breakdown]);
 
   const gradeColor =
@@ -73,29 +85,56 @@ export function ScoreReveal({ score, grade, breakdown }: ScoreRevealProps) {
     grade === "F" ? "text-cyber-crimson" :
     "text-cyber-purple";
 
+  const r = 44;
+  const circumference = 2 * Math.PI * r;
+
   return (
     <div className="flex flex-col items-center gap-4">
       <div
         ref={containerRef}
-        className="flex flex-col items-center justify-center w-28 h-28 lg:w-32 lg:h-32 border-2 border-cyber-green bg-cyber-black/80"
-        style={{ boxShadow: "0 0 20px rgba(0,255,102,0.2), inset 0 0 20px rgba(0,255,102,0.05)" }}
+        className="relative flex items-center justify-center w-[120px] h-[120px] sm:w-[160px] sm:h-[160px] lg:w-[200px] lg:h-[200px]"
       >
-        <span
-          ref={scoreRef}
-          className="text-3xl lg:text-4xl font-bold text-cyber-green font-orbitron tabular-nums"
-        >
-          0
-        </span>
-        <span
-          ref={gradeRef}
-          className={`text-xs font-orbitron tracking-widest opacity-0 translate-y-2 ${gradeColor}`}
-        >
-          {grade}
-        </span>
+        <svg className="absolute inset-0 w-full h-full -rotate-90" viewBox="0 0 100 100">
+          <circle
+            cx="50" cy="50" r={r}
+            fill="none"
+            stroke="var(--color-card-border)"
+            strokeWidth="6"
+            className="sm:!stroke-[8] lg:!stroke-[10]"
+          />
+          <circle
+            ref={circleRef}
+            cx="50" cy="50" r={r}
+            fill="none"
+            stroke="var(--color-text-primary)"
+            strokeWidth="6"
+            strokeDasharray={circumference}
+            strokeDashoffset={circumference}
+            strokeLinecap="round"
+            className="sm:!stroke-[8] lg:!stroke-[10]"
+          />
+        </svg>
+        <div className="flex flex-col items-center z-10">
+          <span
+            ref={scoreRef}
+            className="font-heading font-extrabold text-cyber-green tabular-nums"
+            style={{ fontSize: "var(--text-hero)" }}
+          >
+            0
+          </span>
+          <span
+            ref={gradeRef}
+            className={`font-heading font-bold tracking-widest opacity-0 translate-y-2 ${gradeColor}`}
+            style={{ fontSize: "var(--text-4xl)" }}
+          >
+            {grade}
+          </span>
+        </div>
       </div>
       <div
         ref={tagsRef}
-        className="flex gap-3 text-[10px] font-syncopate tracking-[0.2em] text-cyber-green/50"
+        className="flex gap-3 font-syncopate tracking-[0.2em] text-cyber-green/50"
+        style={{ fontSize: "var(--text-xs)" }}
       >
         {Object.entries(breakdown).map(([key, value]) => (
           <span key={key} className="uppercase">

@@ -1,0 +1,19 @@
+  ▲ Next.js 14.2.35
+  - Local:        http://localhost:3000
+  - Environments: .env.local, .env
+
+ ✓ Starting...
+ ✓ Ready in 19.9s
+ ○ Compiling / ...
+ ✓ Compiled /submit in 53s (884 modules)
+ GET /submit 200 in 19033ms
+ ○ Compiling /history ...
+ ✓ Compiled /history in 1320ms (876 modules)
+ GET /history 200 in 2159ms
+ ○ Compiling /dashboard ...
+ ✓ Compiled /dashboard in 1685ms (882 modules)
+ GET /dashboard 200 in 2339ms
+ ○ Compiling /rubrics ...
+ ✓ Compiled /rubrics in 1324ms (888 modules)
+ GET /rubrics 200 in 1817ms
+ GET / 200 in 164ms

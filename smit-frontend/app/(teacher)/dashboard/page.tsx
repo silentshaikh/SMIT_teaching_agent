@@ -10,9 +10,13 @@ export default function DashboardPage() {
   const gridRef = useRef<HTMLDivElement>(null);
   const chartRef = useRef<HTMLDivElement>(null);
 
+  const batch = typeof window !== "undefined"
+    ? new URLSearchParams(window.location.search).get("batch") || "SMIT-Batch-42"
+    : "SMIT-Batch-42";
+
   const { data } = useQuery({
-    queryKey: ["dashboard"],
-    queryFn: () => fetchDashboard("SMIT-Batch-42"),
+    queryKey: ["dashboard", batch],
+    queryFn: () => fetchDashboard(batch),
   });
 
   useEffect(() => {
@@ -40,8 +44,8 @@ export default function DashboardPage() {
   }, [data]);
 
   return (
-    <main className="min-h-screen bg-cyber-black p-4 lg:p-8">
-      <div className="max-w-5xl mx-auto space-y-4">
+    <main className="min-h-screen bg-cyber-black pt-20 pb-12 px-[var(--space-page-x)]">
+      <div className="max-w-6xl mx-auto space-y-6">
         <div ref={headerRef} className="cyber-panel p-6 lg:p-8">
           <div className="flex items-center gap-3 mb-2">
             <span className="inline-block w-2 h-2 bg-cyber-cyan animate-pulse-neon" />
@@ -49,22 +53,22 @@ export default function DashboardPage() {
               Node // Command
             </span>
           </div>
-          <h1 className="font-orbitron text-3xl lg:text-4xl font-black uppercase tracking-[0.08em] bg-gradient-to-r from-cyber-green via-cyber-purple to-cyber-green bg-[length:200%_auto] animate-gradient-shift bg-clip-text text-transparent">
+          <h1 className="font-heading font-bold uppercase tracking-[0.08em] bg-gradient-to-r from-cyber-green via-cyber-purple to-cyber-green bg-[length:200%_auto] animate-gradient-shift bg-clip-text text-transparent">
             Class Dashboard
           </h1>
         </div>
 
         {data && (
           <>
-            <div ref={gridRef} className="grid md:grid-cols-4 gap-3">
+            <div ref={gridRef} className="grid grid-cols-2 md:grid-cols-4 gap-3">
               {[
                 { label: "Students", value: data.total_students, color: "text-cyber-green" },
                 { label: "Submissions", value: data.total_submissions, color: "text-cyber-cyan" },
                 { label: "Avg Score", value: data.average_score, color: "text-cyber-purple" },
                 { label: "Batch", value: data.batch, color: "text-cyber-green/60" },
               ].map((stat) => (
-                <div key={stat.label} className="cyber-panel p-6 text-center">
-                  <div className={`font-orbitron text-3xl lg:text-4xl font-black tabular-nums ${stat.color}`}>
+                <div key={stat.label} className="cyber-panel p-4 lg:p-6 text-center animate-on-scroll">
+                  <div className={`font-heading font-bold tabular-nums ${stat.color}`}>
                     {stat.value}
                   </div>
                   <div className="font-syncopate text-[10px] text-cyber-green/50 mt-1 tracking-[0.3em] uppercase">

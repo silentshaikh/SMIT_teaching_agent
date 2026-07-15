@@ -1,8 +1,9 @@
 import ast
 import re
+import asyncio
 
-from agents import Agent, function_tool
-from agents import MODEL
+from agents import Agent, Runner, function_tool
+from agents.config import get_model, PRIMARY_MODEL
 
 from models.schemas import CodeReviewResult, MistakeItem
 
@@ -53,6 +54,13 @@ run_linter = function_tool(_run_linter)
 check_structure = function_tool(_check_structure)
 
 
+async def run_code_review(input_data):
+    result = Runner.run(code_review_agent, input=input_data, max_turns=20)
+    if asyncio.iscoroutine(result):
+        result = await result
+    return result.final_output
+
+
 code_review_agent = Agent[None](
     name="CodeReviewAgent",
     instructions="""You are a code review expert for SMIT students learning programming.
@@ -70,5 +78,5 @@ Output a CodeReviewResult with:
 Be thorough but pedagogical. Every mistake should include a helpful description in both English and Roman Urdu.""",
     tools=[parse_ast, run_linter, check_structure],
     output_type=CodeReviewResult,
-    model=MODEL,
+    model=get_model(PRIMARY_MODEL),
 )

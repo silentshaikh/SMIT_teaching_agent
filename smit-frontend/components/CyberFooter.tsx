@@ -52,7 +52,7 @@ export function CyberFooter() {
               <span className="font-syncopate text-[8px] lg:text-[9px] tracking-[0.3em] text-cyber-green/30 uppercase min-w-[60px]">
                 {m.label}
               </span>
-              <span className={`font-space-mono text-[10px] lg:text-xs tabular-nums ${m.color}`}>
+              <span className={`font-body text-[10px] lg:text-xs tabular-nums ${m.color}`}>
                 {m.value}
               </span>
             </div>

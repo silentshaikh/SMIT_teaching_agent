@@ -1,5 +1,7 @@
-from agents import Agent, function_tool
-from agents import MODEL
+import asyncio
+
+from agents import Agent, Runner, function_tool
+from agents.config import get_model, PRIMARY_MODEL
 
 from models.schemas import FeedbackOutput
 
@@ -30,6 +32,13 @@ get_student_history = function_tool(_get_student_history)
 build_plan = function_tool(_build_plan)
 
 
+async def run_feedback(code_review, tutor, rubric, student_id):
+    result = Runner.run(feedback_agent, input=student_id, max_turns=20)
+    if asyncio.iscoroutine(result):
+        result = await result
+    return result.final_output
+
+
 feedback_agent = Agent[None](
     name="FeedbackAgent",
     instructions="""You are a personalized learning coach for SMIT programming students.
@@ -46,5 +55,5 @@ Given the code review, tutor explanation, and rubric score:
 Be constructive and specific. Tailor suggestions to the student's actual mistakes.""",
     tools=[get_student_history, build_plan],
     output_type=FeedbackOutput,
-    model=MODEL,
+    model=get_model(PRIMARY_MODEL),
 )

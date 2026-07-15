@@ -46,6 +46,7 @@ export default function ReportPage() {
   const submissionId = Array.isArray(id) ? id[0] : id;
   const storeStatus = useSubmissionStore((s) => s.status);
   const originalCode = useSubmissionStore((s) => s.originalCode);
+  const language = useSubmissionStore((s) => s.language);
   const mainRef = useRef<HTMLDivElement>(null);
 
   const { data, isLoading, error } = useReportPoller(
@@ -73,8 +74,8 @@ export default function ReportPage() {
   const report: AssignmentReport = data;
 
   return (
-    <main ref={mainRef} className="min-h-screen bg-cyber-black p-4 lg:p-8">
-      <div className="max-w-5xl mx-auto space-y-3">
+    <main ref={mainRef} className="min-h-screen bg-cyber-black pt-20 pb-12 px-[var(--space-page-x)]">
+      <div className="max-w-7xl mx-auto space-y-6">
         {/* Header */}
         <div className="cyber-panel p-6 lg:p-8 gsap-section">
           <div className="flex items-center justify-between gap-6 flex-wrap">
@@ -85,7 +86,7 @@ export default function ReportPage() {
                   Analysis Complete
                 </span>
               </div>
-              <h1 className="font-orbitron text-2xl lg:text-3xl font-black uppercase tracking-[0.06em] bg-gradient-to-r from-cyber-green via-cyber-purple to-cyber-green bg-[length:200%_auto] animate-gradient-shift bg-clip-text text-transparent">
+              <h1 className="font-heading font-bold uppercase tracking-[0.06em] bg-gradient-to-r from-cyber-green via-cyber-purple to-cyber-green bg-[length:200%_auto] animate-gradient-shift bg-clip-text text-transparent">
                 {report.assignment_name}
               </h1>
               <p className="font-syncopate text-[10px] text-cyber-green/40 mt-1 tracking-[0.3em] uppercase">
@@ -100,92 +101,100 @@ export default function ReportPage() {
           </div>
         </div>
 
-        {/* Mistakes */}
-        <section className="cyber-panel p-6 lg:p-8 gsap-section">
-          <div className="flex items-center gap-3 mb-4">
-            <span className="font-syncopate text-xs tracking-[0.3em] text-cyber-crimson uppercase">
-              &gt;&gt; Anomalies
-            </span>
-            <span className="flex-1 border-t border-cyber-crimson/20" />
-            <span className="font-space-mono text-[10px] text-cyber-crimson/50 tabular-nums">
-              {report.mistakes.length} DETECTED
-            </span>
-          </div>
-          <MistakeList mistakes={report.mistakes} />
-        </section>
+        {/* Desktop: 3-col layout | Tablet: 2-col | Mobile: stacked */}
+        <div className="grid lg:grid-cols-12 gap-6">
+          {/* Score panel (desktop: left 30%) */}
+          <div className="lg:col-span-4 space-y-3">
+            {/* Explanations */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-3 gsap-section">
+              <div className="cyber-panel p-6">
+                <span className="font-syncopate text-xs tracking-[0.3em] text-cyber-green uppercase mb-3 block">
+                  &gt;&gt; English
+                </span>
+                <p className="font-body text-cyber-green/80 leading-relaxed">
+                  {report.explanation_en}
+                </p>
+              </div>
+              <div className="cyber-panel p-6" dir="rtl">
+                <span className="font-syncopate text-xs tracking-[0.3em] text-cyber-purple uppercase mb-3 block">
+                  &gt;&gt; Roman Urdu
+                </span>
+                <p className="font-body text-cyber-purple/80 leading-relaxed font-medium">
+                  {report.explanation_urdu}
+                </p>
+              </div>
+            </div>
 
-        {/* Code Diff */}
-        <section className="cyber-panel p-6 lg:p-8 gsap-section">
-          <div className="flex items-center gap-3 mb-4">
-            <span className="font-syncopate text-xs tracking-[0.3em] text-cyber-green uppercase">
-              &gt;&gt; Corrected Code
-            </span>
-            <span className="flex-1 border-t border-cyber-green/20" />
+            {/* Next Topics */}
+            <section className="cyber-panel p-6 gsap-section">
+              <div className="flex items-center gap-3 mb-4">
+                <span className="font-syncopate text-xs tracking-[0.3em] text-cyber-cyan uppercase">
+                  &gt;&gt; Next Topics
+                </span>
+                <span className="flex-1 border-t border-cyber-cyan/20" />
+              </div>
+              <div className="flex flex-wrap gap-3">
+                {report.next_topics.map((t: string, i: number) => (
+                  <span
+                    key={i}
+                    className="border border-cyber-green/30 bg-cyber-black px-4 py-1.5 font-michroma text-[10px] tracking-widest text-cyber-green/80 uppercase"
+                  >
+                    {t}
+                  </span>
+                ))}
+              </div>
+            </section>
           </div>
-          <CodeViewer
-            original={originalCode}
-            modified={report.corrected_code}
-            language="javascript"
-          />
-        </section>
 
-        {/* Explanations */}
-        <div className="grid md:grid-cols-2 gap-3 gsap-section">
-          <div className="cyber-panel p-6 lg:p-8">
-            <span className="font-syncopate text-xs tracking-[0.3em] text-cyber-green uppercase mb-3 block">
-              &gt;&gt; English
-            </span>
-            <p className="font-share-tech text-sm text-cyber-green/80 leading-relaxed">
-              {report.explanation_en}
-            </p>
-          </div>
-          <div className="cyber-panel p-6 lg:p-8" dir="rtl">
-            <span className="font-syncopate text-xs tracking-[0.3em] text-cyber-purple uppercase mb-3 block">
-              &gt;&gt; Roman Urdu
-            </span>
-            <p className="font-share-tech text-sm text-cyber-purple/80 leading-relaxed">
-              {report.explanation_urdu}
-            </p>
+          {/* Mistakes list (desktop: center 40%) */}
+          <section className="lg:col-span-4 cyber-panel p-6 gsap-section">
+            <div className="flex items-center gap-3 mb-4">
+              <span className="font-syncopate text-xs tracking-[0.3em] text-cyber-crimson uppercase">
+                &gt;&gt; Anomalies
+              </span>
+              <span className="flex-1 border-t border-cyber-crimson/20" />
+              <span className="font-space-mono text-[10px] text-cyber-crimson/50 tabular-nums">
+                {report.mistakes.length} DETECTED
+              </span>
+            </div>
+            <MistakeList mistakes={report.mistakes} />
+          </section>
+
+          {/* Code Diff (desktop: right 30%) */}
+          <div className="lg:col-span-4 space-y-3">
+            <section className="cyber-panel p-6 gsap-section">
+              <div className="flex items-center gap-3 mb-4">
+                <span className="font-syncopate text-xs tracking-[0.3em] text-cyber-green uppercase">
+                  &gt;&gt; Corrected Code
+                </span>
+                <span className="flex-1 border-t border-cyber-green/20" />
+              </div>
+              <CodeViewer
+                original={originalCode}
+                modified={report.corrected_code}
+                language={language as "javascript" | "python" | "html"}
+              />
+            </section>
+
+            {/* Suggestions */}
+            <section className="cyber-panel p-6 gsap-section">
+              <div className="flex items-center gap-3 mb-4">
+                <span className="font-syncopate text-xs tracking-[0.3em] text-cyber-purple uppercase">
+                  &gt;&gt; Recommendations
+                </span>
+                <span className="flex-1 border-t border-cyber-purple/20" />
+              </div>
+              <ul className="space-y-2">
+                {report.suggestions.map((s: string, i: number) => (
+                  <li key={i} className="font-body text-cyber-green/70 flex items-start gap-3 animate-on-scroll">
+                    <span className="text-cyber-purple mt-0.5 font-michroma font-bold">&gt;</span>
+                    {s}
+                  </li>
+                ))}
+              </ul>
+            </section>
           </div>
         </div>
-
-        {/* Suggestions */}
-        <section className="cyber-panel p-6 lg:p-8 gsap-section">
-          <div className="flex items-center gap-3 mb-4">
-            <span className="font-syncopate text-xs tracking-[0.3em] text-cyber-purple uppercase">
-              &gt;&gt; Recommendations
-            </span>
-            <span className="flex-1 border-t border-cyber-purple/20" />
-          </div>
-          <ul className="space-y-2">
-            {report.suggestions.map((s: string, i: number) => (
-              <li key={i} className="font-space-mono text-sm text-cyber-green/70 flex items-start gap-3">
-                <span className="text-cyber-purple mt-0.5 font-michroma font-bold">&gt;</span>
-                {s}
-              </li>
-            ))}
-          </ul>
-        </section>
-
-        {/* Next Topics */}
-        <section className="cyber-panel p-6 lg:p-8 gsap-section">
-          <div className="flex items-center gap-3 mb-4">
-            <span className="font-syncopate text-xs tracking-[0.3em] text-cyber-cyan uppercase">
-              &gt;&gt; Next Topics
-            </span>
-            <span className="flex-1 border-t border-cyber-cyan/20" />
-          </div>
-          <div className="flex flex-wrap gap-3">
-            {report.next_topics.map((t: string, i: number) => (
-              <span
-                key={i}
-                className="border border-cyber-green/30 bg-cyber-black px-4 py-1.5 font-michroma text-[10px] tracking-widest text-cyber-green/80 uppercase"
-              >
-                {t}
-              </span>
-            ))}
-          </div>
-        </section>
 
         {/* Footer */}
         <div className="cyber-panel p-3 gsap-section">

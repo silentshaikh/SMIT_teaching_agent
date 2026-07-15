@@ -12,18 +12,14 @@ from api.routes.admin import verify_token
 router = APIRouter(prefix="/api/v1", tags=["reports"])
 
 
-@router.get("/report/{submission_id}")
-async def get_report(
-    submission_id: str,
-    session: AsyncSession = Depends(get_session),
-    _: dict = Depends(verify_token),
-):
+async def get_report_from_store(submission_id: str, session: AsyncSession) -> dict | None:
+    """Fetch report dict from DB. Extracted for testability."""
     result = await session.execute(
         select(SubmissionModel).where(SubmissionModel.id == submission_id)
     )
     submission = result.scalar_one_or_none()
     if submission is None:
-        raise HTTPException(404, "Submission not found")
+        return None
 
     if submission.status != "completed":
         return {"submission_id": submission_id, "status": submission.status}
@@ -33,9 +29,21 @@ async def get_report(
     )
     report = result.scalar_one_or_none()
     if report is None:
-        raise HTTPException(404, "Report not found")
+        return None
 
-    return AssignmentReport.model_validate_json(report.report_json)
+    return AssignmentReport.model_validate_json(report.report_json).model_dump(mode="json")
+
+
+@router.get("/report/{submission_id}")
+async def get_report(
+    submission_id: str,
+    session: AsyncSession = Depends(get_session),
+    _: dict = Depends(verify_token),
+):
+    data = await get_report_from_store(submission_id, session)
+    if data is None:
+        raise HTTPException(404, "Submission not found")
+    return data
 
 
 @router.get("/history/{student_id}")

@@ -12,9 +12,13 @@ export default function HistoryPage() {
   const headerRef = useRef<HTMLDivElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
 
+  const studentId = typeof window !== "undefined"
+    ? new URLSearchParams(window.location.search).get("student_id") || "student-1"
+    : "student-1";
+
   const { data, isLoading } = useQuery({
-    queryKey: ["history"],
-    queryFn: () => getHistory("student-1"),
+    queryKey: ["history", studentId],
+    queryFn: () => getHistory(studentId),
   });
 
   useEffect(() => {
@@ -36,8 +40,8 @@ export default function HistoryPage() {
   }, [data]);
 
   return (
-    <main className="min-h-screen bg-cyber-black p-4 lg:p-8">
-      <div className="max-w-3xl mx-auto space-y-4">
+    <main className="min-h-screen bg-cyber-black pt-20 pb-12 px-[var(--space-page-x)]">
+      <div className="max-w-3xl mx-auto space-y-6">
         <div ref={headerRef} className="cyber-panel p-6 lg:p-8">
           <div className="flex items-center gap-3 mb-2">
             <span className="inline-block w-2 h-2 bg-cyber-purple animate-pulse-neon" />
@@ -45,7 +49,7 @@ export default function HistoryPage() {
               Node // History
             </span>
           </div>
-          <h1 className="font-orbitron text-3xl lg:text-4xl font-black uppercase tracking-[0.08em] bg-gradient-to-r from-cyber-green via-cyber-purple to-cyber-green bg-[length:200%_auto] animate-gradient-shift bg-clip-text text-transparent">
+          <h1 className="font-heading text-3xl lg:text-4xl font-black uppercase tracking-[0.08em] bg-gradient-to-r from-cyber-green via-cyber-purple to-cyber-green bg-[length:200%_auto] animate-gradient-shift bg-clip-text text-transparent">
             Submission History
           </h1>
         </div>
