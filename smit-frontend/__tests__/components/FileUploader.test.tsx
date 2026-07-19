@@ -1,9 +1,10 @@
-import { render, screen, fireEvent } from '@testing-library/react'
+import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import '@testing-library/jest-dom'
 import { FileUploader } from '@/components/FileUploader'
 
+const mockPush = jest.fn()
 jest.mock('next/navigation', () => ({
-  useRouter: () => ({ push: jest.fn() }),
+  useRouter: () => ({ push: mockPush }),
 }))
 
 jest.mock('@tanstack/react-query', () => ({
@@ -11,22 +12,37 @@ jest.mock('@tanstack/react-query', () => ({
     mutate: jest.fn(),
     isPending: false,
   }),
-  useQuery: () => ({
-    data: [
-      { id: 'a1', name: 'Homework 1', course_id: 'c1', rubric_id: null, due_date: null, created_at: '2026-01-01' },
-      { id: 'a2', name: 'Homework 2', course_id: 'c1', rubric_id: null, due_date: null, created_at: '2026-01-02' },
-    ],
-    isLoading: false,
-  }),
+  useQuery: ({ queryKey }: { queryKey: string[] }) => {
+    if (queryKey[0] === 'assignments') {
+      return {
+        data: [
+          { id: 'a1', name: 'Homework 1', course_id: 'c1', rubric_id: 'r1', due_date: null, created_at: '2026-01-01' },
+          { id: 'a2', name: 'Homework 2', course_id: 'c1', rubric_id: null, due_date: null, created_at: '2026-01-02' },
+        ],
+        isLoading: false,
+      }
+    }
+    if (queryKey[0] === 'rubrics') {
+      return {
+        data: [
+          { id: 'r1', assignment_name: 'Python Basics', language: 'python', criteria: { syntax: 50, logic: 50 }, max_score: 100, created_by: 'teacher' },
+        ],
+        isLoading: false,
+      }
+    }
+    return { data: [], isLoading: false }
+  },
 }))
 
 jest.mock('@/lib/api', () => ({
   submitFile: jest.fn(),
   fetchAssignments: jest.fn(),
+  fetchRubrics: jest.fn(),
+  getHistory: jest.fn(),
 }))
 
 jest.mock('@/store/submission', () => {
-  const store = {
+  const store: Record<string, unknown> = {
     setSubmissionId: jest.fn(),
     setStatus: jest.fn(),
     setOriginalCode: jest.fn(),
@@ -34,40 +50,36 @@ jest.mock('@/store/submission', () => {
     setStudentId: jest.fn(),
     setAssignmentName: jest.fn(),
     setRubricId: jest.fn(),
+    studentId: '',
+    userId: 'u1',
   }
   const hook = (selector: (s: typeof store) => any) => selector(store)
   return { useSubmissionStore: hook }
 })
 
-// TC-020
+beforeEach(() => jest.clearAllMocks())
+
 test('TC-020: renders file input', () => {
   const { container } = render(<FileUploader />)
-  const input = container.querySelector('input[type="file"]')
-  expect(input).toBeInTheDocument()
+  expect(container.querySelector('input[type="file"]')).toBeInTheDocument()
 })
 
-// TC-021
 test('TC-021: renders student ID input', () => {
   render(<FileUploader />)
-  const input = screen.getByPlaceholderText(/> SMIT-101/)
-  expect(input).toBeInTheDocument()
+  expect(screen.getByPlaceholderText(/> SMIT-101/)).toBeInTheDocument()
 })
 
-// TC-022
 test('TC-022: renders assignment dropdown', () => {
   render(<FileUploader />)
-  const select = screen.getByRole('combobox')
-  expect(select).toBeInTheDocument()
+  const selects = screen.getAllByRole('combobox')
+  expect(selects.length).toBeGreaterThanOrEqual(1)
 })
 
-// TC-023
 test('TC-023: renders submit button', () => {
   render(<FileUploader />)
-  const button = screen.getByRole('button', { name: /submit/i })
-  expect(button).toBeInTheDocument()
+  expect(screen.getByRole('button', { name: /submit/i })).toBeInTheDocument()
 })
 
-// TC-024
 test('TC-024: shows error for invalid file type', () => {
   const { container } = render(<FileUploader />)
   const input = container.querySelector('input[type="file"]') as HTMLInputElement
@@ -77,7 +89,6 @@ test('TC-024: shows error for invalid file type', () => {
   expect(screen.getByText(/invalid file type/i)).toBeInTheDocument()
 })
 
-// TC-025
 test('TC-025: accepts valid .js file', () => {
   const { container } = render(<FileUploader />)
   const input = container.querySelector('input[type="file"]') as HTMLInputElement
@@ -87,9 +98,23 @@ test('TC-025: accepts valid .js file', () => {
   expect(screen.queryByText(/invalid file type/i)).not.toBeInTheDocument()
 })
 
-// TC-026
 test('TC-026: submit button disabled without file', () => {
   render(<FileUploader />)
-  const button = screen.getByRole('button', { name: /submit/i })
-  expect(button).toBeDisabled()
+  expect(screen.getByRole('button', { name: /submit/i })).toBeDisabled()
+})
+
+test('TC-028: renders rubric selector', () => {
+  render(<FileUploader />)
+  expect(screen.getByText('-- Select Rubric --')).toBeInTheDocument()
+})
+
+test('TC-029: submit button is disabled without file', () => {
+  render(<FileUploader />)
+  const btn = screen.getByRole('button', { name: /submit/i })
+  expect(btn).toBeDisabled()
+})
+
+test('TC-030: does not render recent submissions when no data', () => {
+  render(<FileUploader />)
+  expect(screen.queryByText(/recent submissions/i)).not.toBeInTheDocument()
 })
