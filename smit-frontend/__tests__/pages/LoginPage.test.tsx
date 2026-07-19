@@ -75,3 +75,15 @@ test('TC-LOGIN-06: shows error on 401 response', async () => {
 
   expect(await screen.findByText('Invalid credentials')).toBeInTheDocument()
 })
+
+test('TC-LOGIN-07: renders student and teacher role buttons', () => {
+  render(<LoginPage />)
+  expect(screen.getByRole('button', { name: /student/i })).toBeInTheDocument()
+  expect(screen.getByRole('button', { name: /teacher/i })).toBeInTheDocument()
+})
+
+test('TC-LOGIN-08: student is selected by default', () => {
+  render(<LoginPage />)
+  const studentBtn = screen.getByRole('button', { name: /student/i })
+  expect(studentBtn.className).toContain('bg-cyber-green/20')
+})

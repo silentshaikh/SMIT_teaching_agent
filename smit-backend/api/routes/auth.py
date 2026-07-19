@@ -52,29 +52,24 @@ async def verify_token(authorization: str | None = Header(None)) -> dict:
 
 @router.post("/login", response_model=LoginResponse)
 async def login(body: LoginRequest, session: AsyncSession = Depends(get_session)):
-    # Try student login first
-    result = await session.execute(
-        select(StudentModel).where(StudentModel.email == body.email)
-    )
-    student = result.scalar_one_or_none()
-    if student:
-        if not student.password_hash or not verify_password(body.password, student.password_hash):
+    if body.role == "student":
+        result = await session.execute(
+            select(StudentModel).where(StudentModel.email == body.email)
+        )
+        student = result.scalar_one_or_none()
+        if not student or not student.password_hash or not verify_password(body.password, student.password_hash):
             raise HTTPException(401, "Invalid email or password")
         token = create_token(student.id, "student", student.email)
         return LoginResponse(token=token, role="student", user_id=student.id, name=student.name)
 
-    # Try teacher login
     result = await session.execute(
         select(TeacherModel).where(TeacherModel.email == body.email)
     )
     teacher = result.scalar_one_or_none()
-    if teacher:
-        if not teacher.password_hash or not verify_password(body.password, teacher.password_hash):
-            raise HTTPException(401, "Invalid email or password")
-        token = create_token(teacher.id, "teacher", teacher.email)
-        return LoginResponse(token=token, role="teacher", user_id=teacher.id, name=teacher.name)
-
-    raise HTTPException(401, "Invalid email or password")
+    if not teacher or not teacher.password_hash or not verify_password(body.password, teacher.password_hash):
+        raise HTTPException(401, "Invalid email or password")
+    token = create_token(teacher.id, "teacher", teacher.email)
+    return LoginResponse(token=token, role="teacher", user_id=teacher.id, name=teacher.name)
 
 
 @router.post("/register", response_model=LoginResponse)

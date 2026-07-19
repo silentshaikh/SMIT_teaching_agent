@@ -176,6 +176,7 @@ class DashboardStats(BaseModel):
 class LoginRequest(BaseModel):
     email: str
     password: str
+    role: Literal["student", "teacher"]
 
 
 class RegisterRequest(BaseModel):

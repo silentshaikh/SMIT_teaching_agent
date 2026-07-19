@@ -32,6 +32,7 @@ def test_login_student_success(client):
     r = client.post("/api/v1/auth/login", json={
         "email": f"student-{_uid}@test.com",
         "password": "pass123",
+        "role": "student",
     })
     assert r.status_code == 200
     data = r.json()
@@ -64,6 +65,7 @@ def test_login_teacher_success(client):
     r = client.post("/api/v1/auth/login", json={
         "email": f"teacher-{_uid}@test.com",
         "password": "pass456",
+        "role": "teacher",
     })
     assert r.status_code == 200
     data = r.json()
@@ -76,6 +78,7 @@ def test_login_wrong_password(client):
     r = client.post("/api/v1/auth/login", json={
         "email": "nonexistent@test.com",
         "password": "wrong",
+        "role": "student",
     })
     assert r.status_code == 401
 
@@ -106,6 +109,7 @@ def test_student_wrong_password_does_not_fall_through_to_teacher(client):
     r = client.post("/api/v1/auth/login", json={
         "email": f"shared-{_uid}@test.com",
         "password": "teacher-pass",
+        "role": "student",
     })
     assert r.status_code == 401
 
@@ -135,6 +139,7 @@ def test_login_returns_valid_jwt(client):
     r = client.post("/api/v1/auth/login", json={
         "email": f"jwt-{_uid}@test.com",
         "password": "secret",
+        "role": "teacher",
     })
     token = r.json()["token"]
     from config import settings

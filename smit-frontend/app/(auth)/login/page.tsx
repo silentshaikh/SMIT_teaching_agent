@@ -11,6 +11,7 @@ export default function LoginPage() {
   const containerRef = useRef<HTMLDivElement>(null);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [role, setRole] = useState<"student" | "teacher">("student");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const setAuth = useSubmissionStore((s) => s.setAuth);
@@ -36,7 +37,7 @@ export default function LoginPage() {
       const res = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ email, password, role }),
       });
 
       if (!res.ok) {
@@ -87,6 +88,26 @@ export default function LoginPage() {
               </span>
             </div>
           )}
+
+          <div>
+            <label className="block mb-2">I am a *</label>
+            <div className="flex gap-3">
+              {(["student", "teacher"] as const).map((r) => (
+                <button
+                  key={r}
+                  type="button"
+                  onClick={() => setRole(r)}
+                  className={`flex-1 py-3 border font-syncopate text-[10px] tracking-widest uppercase transition-colors ${
+                    role === r
+                      ? "border-cyber-green bg-cyber-green/20 text-cyber-green"
+                      : "border-cyber-green/20 text-cyber-green/40 hover:border-cyber-green/50"
+                  }`}
+                >
+                  &gt;&gt; {r}
+                </button>
+              ))}
+            </div>
+          </div>
 
           <div>
             <label className="block mb-2">Email *</label>

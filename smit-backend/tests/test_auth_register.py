@@ -89,7 +89,7 @@ def test_register_then_login(client):
     })
     assert r.status_code == 200
 
-    r2 = client.post("/api/v1/auth/login", json={"email": email, "password": "secure123"})
+    r2 = client.post("/api/v1/auth/login", json={"email": email, "password": "secure123", "role": "student"})
     assert r2.status_code == 200
     assert r2.json()["role"] == "student"
 
