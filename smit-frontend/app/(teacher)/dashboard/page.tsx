@@ -3,20 +3,28 @@
 import { useEffect, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import gsap from "gsap";
-import { fetchDashboard } from "@/lib/api";
+import { fetchDashboard, getBatchAnalytics } from "@/lib/api";
 
 export default function DashboardPage() {
   const headerRef = useRef<HTMLDivElement>(null);
   const gridRef = useRef<HTMLDivElement>(null);
   const chartRef = useRef<HTMLDivElement>(null);
+  const coursesRef = useRef<HTMLDivElement>(null);
+  const insightsRef = useRef<HTMLDivElement>(null);
 
   const batch = typeof window !== "undefined"
     ? new URLSearchParams(window.location.search).get("batch") || "SMIT-Batch-42"
     : "SMIT-Batch-42";
 
-  const { data } = useQuery({
+  const { data, isLoading } = useQuery({
     queryKey: ["dashboard", batch],
     queryFn: () => fetchDashboard(batch),
+  });
+
+  const { data: analytics } = useQuery({
+    queryKey: ["analytics", batch],
+    queryFn: () => getBatchAnalytics(batch),
+    enabled: !!data && data.total_students > 0,
   });
 
   useEffect(() => {
@@ -39,6 +47,22 @@ export default function DashboardPage() {
         { y: 0, opacity: 1, duration: 0.35, ease: "power2.out" },
         "-=0.15"
       );
+      if (coursesRef.current) {
+        tl.fromTo(
+          coursesRef.current,
+          { y: 50, opacity: 0 },
+          { y: 0, opacity: 1, duration: 0.35, ease: "power2.out" },
+          "-=0.15"
+        );
+      }
+      if (insightsRef.current) {
+        tl.fromTo(
+          insightsRef.current,
+          { y: 50, opacity: 0 },
+          { y: 0, opacity: 1, duration: 0.35, ease: "power2.out" },
+          "-=0.15"
+        );
+      }
     });
     return () => ctx.revert();
   }, [data]);
@@ -56,9 +80,36 @@ export default function DashboardPage() {
           <h1 className="font-heading font-bold uppercase tracking-[0.08em] bg-gradient-to-r from-cyber-green via-cyber-purple to-cyber-green bg-[length:200%_auto] animate-gradient-shift bg-clip-text text-transparent">
             Class Dashboard
           </h1>
+          <div className="mt-3">
+            <button
+              onClick={() => {
+                const BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
+                window.open(`${BASE}/api/v1/batches/${batch}/report.pdf`, "_blank");
+              }}
+              className="cyber-btn text-[10px] px-4 py-1.5 h-auto"
+            >
+              &gt;&gt; Export Weekly Report (PDF)
+            </button>
+          </div>
         </div>
 
-        {data && (
+        {isLoading && (
+          <div className="cyber-panel p-6 text-center">
+            <span className="font-michroma text-xs tracking-widest text-cyber-green/50 animate-pulse-neon uppercase">
+              &gt;&gt; Compiling Batch Telemetry...
+            </span>
+          </div>
+        )}
+
+        {data && data.total_students === 0 && (
+          <div className="cyber-panel p-6 text-center">
+            <span className="font-syncopate text-xs tracking-widest text-cyber-green/50 uppercase">
+              // NO STUDENTS IN THIS BATCH YET
+            </span>
+          </div>
+        )}
+
+        {data && data.total_students > 0 && (
           <>
             <div ref={gridRef} className="grid grid-cols-2 md:grid-cols-4 gap-3">
               {[
@@ -106,6 +157,74 @@ export default function DashboardPage() {
                 ))}
               </div>
             </div>
+
+            {data.courses && data.courses.length > 0 && (
+              <div ref={coursesRef} className="cyber-panel p-6 lg:p-8">
+                <div className="flex items-center gap-3 mb-6">
+                  <span className="font-syncopate text-xs tracking-[0.3em] text-cyber-cyan uppercase">
+                    &gt;&gt; Per-Course Breakdown
+                  </span>
+                  <span className="flex-1 border-t border-cyber-cyan/20" />
+                </div>
+                <div className="space-y-4">
+                  {data.courses.map((course) => (
+                    <div
+                      key={course.course_id}
+                      className="border border-cyber-green/10 p-4 flex items-center justify-between"
+                    >
+                      <div>
+                        <span className="font-orbitron text-sm tracking-wider text-cyber-green uppercase">
+                          {course.course_name}
+                        </span>
+                        <div className="font-space-mono text-[10px] text-cyber-green/40 mt-1">
+                          {course.total_submissions} submission{course.total_submissions !== 1 ? "s" : ""}
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className="font-orbitron text-xl font-bold text-cyber-purple tabular-nums">
+                          {course.average_score}
+                        </div>
+                        <div className="font-syncopate text-[10px] text-cyber-green/40 tracking-wider uppercase">
+                          avg
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {analytics && analytics.mistake_stats.length > 0 && (
+              <div ref={insightsRef} className="cyber-panel p-6 lg:p-8">
+                <div className="flex items-center gap-3 mb-6">
+                  <span className="font-syncopate text-xs tracking-[0.3em] text-cyber-crimson uppercase">
+                    &gt;&gt; Class Insights — Mistake Breakdown
+                  </span>
+                  <span className="flex-1 border-t border-cyber-crimson/20" />
+                </div>
+                <div className="space-y-4">
+                  {analytics.mistake_stats.map((ms) => (
+                    <div key={ms.type} className="flex items-center gap-4">
+                      <span className="font-orbitron text-sm font-bold text-cyber-green/80 w-24 text-right uppercase">
+                        {ms.type}
+                      </span>
+                      <div className="flex-1 bg-cyber-black border border-cyber-grey/30 h-8 relative overflow-hidden">
+                        <div
+                          className="bg-cyber-crimson h-full transition-all duration-700 ease-out"
+                          style={{ width: `${ms.percentage}%` }}
+                        />
+                      </div>
+                      <span className="font-orbitron text-sm tabular-nums text-cyber-green/50 w-16 text-right">
+                        {ms.percentage}%
+                      </span>
+                      <span className="font-space-mono text-[10px] text-cyber-green/30 w-12 text-right">
+                        ({ms.count})
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </>
         )}
       </div>

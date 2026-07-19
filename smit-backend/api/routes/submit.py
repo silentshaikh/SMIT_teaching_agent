@@ -5,7 +5,7 @@ from fastapi import APIRouter, UploadFile, Form, Depends, HTTPException
 
 from models.schemas import SubmissionInput, SubmitResponse
 from agents.orchestrator import process_submission
-from api.routes.admin import verify_token
+from api.routes.auth import verify_token
 
 router = APIRouter(prefix="/api/v1", tags=["submit"])
 
@@ -20,6 +20,7 @@ async def submit_assignment(
     file: UploadFile,
     student_id: str = Form(...),
     assignment_name: str = Form(...),
+    assignment_id: str = Form(None),
     rubric_id: str = Form(...),
     _: dict = Depends(verify_token),
 ):
@@ -36,6 +37,7 @@ async def submit_assignment(
     submission_id = str(uuid4())
     input_data = SubmissionInput(
         student_id=student_id,
+        assignment_id=assignment_id,
         assignment_name=assignment_name,
         language=lang_map[ext],
         code=code,

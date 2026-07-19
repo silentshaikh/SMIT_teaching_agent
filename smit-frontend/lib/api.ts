@@ -5,25 +5,80 @@ import type {
   HistoryItem,
   Rubric,
   DashboardStats,
+  Assignment,
+  Course,
+  LoginResponse,
+  StudentProgress,
+  QAPair,
+  ReverifyResponse,
+  Badge,
+  BatchAnalytics,
+  RubricVersionCompare,
+  BulkSubmitResult,
 } from "./types";
 
 const BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 
-const client = axios.create({ baseURL: BASE });
+let authToken: string | null = null;
+
+export function setAuthToken(token: string | null) {
+  authToken = token;
+}
+
+const client = axios.create({
+  baseURL: BASE,
+  headers: { "Content-Type": "application/json" },
+});
+
+client.interceptors.request.use((config) => {
+  if (authToken) {
+    config.headers.Authorization = `Bearer ${authToken}`;
+  }
+  return config;
+});
+
+export async function login(
+  email: string,
+  password: string
+): Promise<LoginResponse> {
+  const { data } = await client.post<LoginResponse>("/api/v1/auth/login", {
+    email,
+    password,
+  });
+  return data;
+}
 
 export async function submitFile(
   file: File,
   studentId: string,
   assignmentName: string,
-  rubricId: string
+  rubricId: string,
+  assignmentId?: string
 ): Promise<SubmissionResponse> {
   const form = new FormData();
   form.append("file", file);
   form.append("student_id", studentId);
   form.append("assignment_name", assignmentName);
   form.append("rubric_id", rubricId);
+  if (assignmentId) {
+    form.append("assignment_id", assignmentId);
+  }
 
   const { data } = await client.post<SubmissionResponse>("/api/v1/submit", form);
+  return data;
+}
+
+export async function fetchAssignments(
+  courseId?: string
+): Promise<Assignment[]> {
+  const params = courseId ? { course_id: courseId } : {};
+  const { data } = await client.get<Assignment[]>("/api/v1/assignments", { params });
+  return data;
+}
+
+export async function fetchCourses(batch?: string): Promise<Course[]> {
+  const params = batch ? { batch } : {};
+  const { data } = await client.get<Course[]>("/api/v1/courses", { params });
   return data;
 }
 
@@ -64,6 +119,103 @@ export async function downloadReport(
 ): Promise<AssignmentReport> {
   const { data } = await client.get<AssignmentReport>(
     `/api/v1/report/${submissionId}/download`
+  );
+  return data;
+}
+
+// ── Phase 1 API ────────────────────────────────────
+
+export async function getStudentProgress(
+  studentId: string
+): Promise<StudentProgress> {
+  const { data } = await client.get<StudentProgress>(
+    `/api/v1/students/${studentId}/progress`
+  );
+  return data;
+}
+
+export async function askQuestion(
+  submissionId: string,
+  question: string
+): Promise<QAPair> {
+  const { data } = await client.post<QAPair>(
+    `/api/v1/report/${submissionId}/ask`,
+    { question }
+  );
+  return data;
+}
+
+export async function getQAHistory(
+  submissionId: string
+): Promise<QAPair[]> {
+  const { data } = await client.get<QAPair[]>(
+    `/api/v1/report/${submissionId}/qa`
+  );
+  return data;
+}
+
+export async function reverifyMistake(
+  mistakeId: string,
+  correctedSnippet: string
+): Promise<ReverifyResponse> {
+  const { data } = await client.post<ReverifyResponse>(
+    `/api/v1/mistakes/${mistakeId}/reverify`,
+    { corrected_snippet: correctedSnippet }
+  );
+  return data;
+}
+
+export async function getBadges(
+  studentId: string
+): Promise<Badge[]> {
+  const { data } = await client.get<Badge[]>(
+    `/api/v1/students/${studentId}/badges`
+  );
+  return data;
+}
+
+// ── Phase 2 API ────────────────────────────────────
+
+export async function getBatchAnalytics(
+  batch: string,
+  params?: { assignment_id?: string; date_from?: string; date_to?: string }
+): Promise<BatchAnalytics> {
+  const { data } = await client.get<BatchAnalytics>(
+    `/api/v1/batches/${batch}/analytics`,
+    { params }
+  );
+  return data;
+}
+
+export async function overrideReport(
+  submissionId: string,
+  newScore: number,
+  teacherNote: string
+): Promise<{ status: string }> {
+  const { data } = await client.patch<{ status: string }>(
+    `/api/v1/report/${submissionId}/override`,
+    { new_score: newScore, teacher_note: teacherNote }
+  );
+  return data;
+}
+
+export async function compareRubricVersions(
+  rubricId: string
+): Promise<RubricVersionCompare[]> {
+  const { data } = await client.get<RubricVersionCompare[]>(
+    `/api/v1/rubrics/${rubricId}/compare`
+  );
+  return data;
+}
+
+export async function bulkSubmit(
+  file: File
+): Promise<BulkSubmitResult> {
+  const form = new FormData();
+  form.append("file", file);
+  const { data } = await client.post<BulkSubmitResult>(
+    "/api/v1/submit/bulk",
+    form
   );
   return data;
 }

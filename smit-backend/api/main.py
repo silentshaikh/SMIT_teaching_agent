@@ -7,6 +7,9 @@ from db.session import init_db
 from api.routes.submit import router as submit_router
 from api.routes.reports import router as reports_router
 from api.routes.admin import router as admin_router
+from api.routes.auth import router as auth_router
+from api.routes.phase1 import router as phase1_router
+from api.routes.phase2 import router as phase2_router
 
 
 @asynccontextmanager
@@ -33,3 +36,6 @@ app.add_middleware(
 app.include_router(submit_router)
 app.include_router(reports_router)
 app.include_router(admin_router)
+app.include_router(auth_router)
+app.include_router(phase1_router)
+app.include_router(phase2_router)

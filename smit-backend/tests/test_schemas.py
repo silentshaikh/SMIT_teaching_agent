@@ -1,6 +1,6 @@
 import pytest
 from uuid import uuid4
-from datetime import datetime
+from datetime import datetime, timezone
 from pydantic import ValidationError
 from models.schemas import (
     MistakeItem, SubmissionInput, CodeReviewResult,
@@ -122,7 +122,7 @@ def test_assignment_report_valid():
         next_topics=["Functions"],
         breakdown={"syntax": 25, "logic": 30},
         processing_time_ms=3200,
-        created_at=datetime.utcnow()
+        created_at=datetime.now(timezone.utc)
     )
     assert report.score == 85
     assert report.grade == "B"

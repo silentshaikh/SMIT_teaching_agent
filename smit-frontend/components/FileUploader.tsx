@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, type ChangeEvent, type DragEvent, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
-import { useMutation } from "@tanstack/react-query";
-import { submitFile } from "@/lib/api";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { submitFile, fetchAssignments } from "@/lib/api";
 import { useSubmissionStore } from "@/store/submission";
 import type { SubmissionResponse } from "@/lib/types";
 
@@ -16,21 +16,37 @@ export function FileUploader() {
   const setStatus = useSubmissionStore((s) => s.setStatus);
   const setOriginalCode = useSubmissionStore((s) => s.setOriginalCode);
   const setLanguage = useSubmissionStore((s) => s.setLanguage);
+  const storeSetStudentId = useSubmissionStore((s) => s.setStudentId);
+  const storeSetAssignmentName = useSubmissionStore((s) => s.setAssignmentName);
+  const storeSetRubricId = useSubmissionStore((s) => s.setRubricId);
 
   const [file, setFile] = useState<File | null>(null);
   const [studentId, setStudentId] = useState("");
-  const [assignmentName, setAssignmentName] = useState("");
+  const [selectedAssignmentId, setSelectedAssignmentId] = useState("");
   const [rubricId, setRubricId] = useState("default");
   const [error, setError] = useState<string | null>(null);
   const [isDragOver, setIsDragOver] = useState(false);
 
+  const { data: assignments } = useQuery({
+    queryKey: ["assignments"],
+    queryFn: () => fetchAssignments(),
+  });
+
+  const selectedAssignment = assignments?.find((a) => a.id === selectedAssignmentId);
+
   const mutation = useMutation({
     mutationFn: () =>
-      submitFile(file!, studentId, assignmentName, rubricId),
+      submitFile(
+        file!,
+        studentId,
+        selectedAssignment?.name ?? "",
+        rubricId,
+        selectedAssignmentId || undefined
+      ),
   });
 
   const handleFileChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
+    (e: ChangeEvent<HTMLInputElement>) => {
       const f = e.target.files?.[0];
       setError(null);
       setIsDragOver(false);
@@ -66,7 +82,7 @@ export function FileUploader() {
   );
 
   const handleDrop = useCallback(
-    (e: React.DragEvent) => {
+    (e: DragEvent) => {
       e.preventDefault();
       setIsDragOver(false);
       const f = e.dataTransfer.files[0];
@@ -93,11 +109,11 @@ export function FileUploader() {
     [setOriginalCode, setLanguage]
   );
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
     setError(null);
 
-    if (!file || !studentId || !assignmentName) {
+    if (!file || !studentId || !selectedAssignmentId) {
       setError("! MISSING REQUIRED FIELDS");
       return;
     }
@@ -106,6 +122,9 @@ export function FileUploader() {
       onSuccess: (data: SubmissionResponse) => {
         setSubmissionId(data.submission_id);
         setStatus("processing");
+        storeSetStudentId(studentId);
+        storeSetAssignmentName(selectedAssignment?.name ?? "");
+        storeSetRubricId(rubricId);
         router.push(`/report/${data.submission_id}`);
       },
       onError: (err: Error) => {
@@ -131,7 +150,6 @@ export function FileUploader() {
           onDragOver={(e) => { e.preventDefault(); setIsDragOver(true); }}
           onDragLeave={() => setIsDragOver(false)}
           onDrop={handleDrop}
-          data-cursor="drag"
           className={`relative border-2 border-dashed transition-all duration-200 cursor-pointer hover:border-[var(--color-accent)] hover:scale-[1.01] ${
             isDragOver
               ? "border-[var(--color-accent)] bg-[var(--color-card-bg)] border-solid"
@@ -174,15 +192,25 @@ export function FileUploader() {
       </div>
 
       <div>
-        <label className="block mb-2">Assignment Name *</label>
-        <input
-          type="text"
-          value={assignmentName}
-          onChange={(e) => setAssignmentName(e.target.value)}
+        <label className="block mb-2">Assignment *</label>
+        <select
+          value={selectedAssignmentId}
+          onChange={(e) => setSelectedAssignmentId(e.target.value)}
           className="cyber-input"
-          placeholder="> CALCULATOR_APP"
           required
-        />
+        >
+          <option value="">-- Select Assignment --</option>
+          {assignments?.map((a) => (
+            <option key={a.id} value={a.id}>
+              {a.name}
+            </option>
+          ))}
+        </select>
+        {assignments && assignments.length === 0 && (
+          <p className="font-space-mono text-[10px] text-cyber-green/40 mt-1">
+            // No assignments available — ask your teacher to create one
+          </p>
+        )}
       </div>
 
       <button

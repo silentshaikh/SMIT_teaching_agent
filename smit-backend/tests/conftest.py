@@ -15,7 +15,7 @@ os.environ.setdefault("OPENAI_API_KEY", "test-openai-key")
 
 # Override settings before importing app
 import config as cfg
-cfg.settings = cfg.Settings(_env_file=None)
+cfg.settings = cfg.Settings(_env_file=None, dev_mode=True)
 
 _here = os.path.dirname(os.path.abspath(__file__))
 _root = os.path.dirname(_here)

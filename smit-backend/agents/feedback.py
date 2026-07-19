@@ -49,8 +49,9 @@ Your job is to generate 3-5 personalized improvement suggestions based on:
 
 Given the code review, tutor explanation, and rubric score:
 1. Look up the student's submission history using get_student_history
-2. Build a personalized study/improvement plan
+2. Build a personalized study/improvement plan using build_plan
 3. Suggest specific topics the student should study next
+4. Generate 1-2 short practice prompts targeting the student's most frequent mistake type — these should be specific coding exercises (e.g., "Write a function that reverses a string using a loop") that the student can do right now to improve
 
 Be constructive and specific. Tailor suggestions to the student's actual mistakes.""",
     tools=[get_student_history, build_plan],

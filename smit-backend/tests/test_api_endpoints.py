@@ -242,7 +242,7 @@ async def test_process_submission_returns_none_on_failure(mock_retry, mock_sessi
 # ── Coverage booster: admin verify_token ──
 
 async def test_verify_token_no_secret():
-    from api.routes.admin import verify_token
+    from api.routes.auth import verify_token
     import config as cfg
     original = cfg.settings.jwt_secret
     cfg.settings.jwt_secret = "change-me-to-a-random-secret"
@@ -254,7 +254,7 @@ async def test_verify_token_no_secret():
 
 
 async def test_verify_token_bearer():
-    from api.routes.admin import verify_token
+    from api.routes.auth import verify_token
     from jose import jwt
     import config as cfg
     original = cfg.settings.jwt_secret
@@ -268,7 +268,7 @@ async def test_verify_token_bearer():
 
 
 async def test_verify_token_invalid_token():
-    from api.routes.admin import verify_token
+    from api.routes.auth import verify_token
     from fastapi import HTTPException
     import config as cfg
     original = cfg.settings.jwt_secret
@@ -282,7 +282,7 @@ async def test_verify_token_invalid_token():
 
 
 async def test_verify_token_bad_scheme():
-    from api.routes.admin import verify_token
+    from api.routes.auth import verify_token
     from fastapi import HTTPException
     import config as cfg
     original = cfg.settings.jwt_secret

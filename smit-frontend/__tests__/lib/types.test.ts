@@ -3,6 +3,7 @@ import type { MistakeItem, AssignmentReport, SubmissionResponse } from '@/lib/ty
 // TC-048
 test('TC-048: MistakeItem has required fields', () => {
   const item: MistakeItem = {
+    id: 'm1',
     type: 'syntax',
     line: 5,
     description: 'test',

@@ -5,7 +5,7 @@ import pytest
 from httpx import ASGITransport, AsyncClient
 
 from api.main import app
-from api.routes.admin import verify_token
+from api.routes.auth import verify_token
 
 
 @pytest.fixture(autouse=True)
@@ -50,6 +50,9 @@ class FakeSession:
         obj.id = "generated-uuid"
 
     async def commit(self):
+        pass
+
+    async def flush(self):
         pass
 
     async def refresh(self, obj):

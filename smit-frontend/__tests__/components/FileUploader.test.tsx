@@ -11,10 +11,18 @@ jest.mock('@tanstack/react-query', () => ({
     mutate: jest.fn(),
     isPending: false,
   }),
+  useQuery: () => ({
+    data: [
+      { id: 'a1', name: 'Homework 1', course_id: 'c1', rubric_id: null, due_date: null, created_at: '2026-01-01' },
+      { id: 'a2', name: 'Homework 2', course_id: 'c1', rubric_id: null, due_date: null, created_at: '2026-01-02' },
+    ],
+    isLoading: false,
+  }),
 }))
 
 jest.mock('@/lib/api', () => ({
   submitFile: jest.fn(),
+  fetchAssignments: jest.fn(),
 }))
 
 jest.mock('@/store/submission', () => {
@@ -23,6 +31,9 @@ jest.mock('@/store/submission', () => {
     setStatus: jest.fn(),
     setOriginalCode: jest.fn(),
     setLanguage: jest.fn(),
+    setStudentId: jest.fn(),
+    setAssignmentName: jest.fn(),
+    setRubricId: jest.fn(),
   }
   const hook = (selector: (s: typeof store) => any) => selector(store)
   return { useSubmissionStore: hook }
@@ -43,10 +54,10 @@ test('TC-021: renders student ID input', () => {
 })
 
 // TC-022
-test('TC-022: renders assignment name input', () => {
+test('TC-022: renders assignment dropdown', () => {
   render(<FileUploader />)
-  const input = screen.getByPlaceholderText(/> CALCULATOR_APP/)
-  expect(input).toBeInTheDocument()
+  const select = screen.getByRole('combobox')
+  expect(select).toBeInTheDocument()
 })
 
 // TC-023

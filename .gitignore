@@ -1,0 +1,9 @@
+__pycache__/
+*.pyc
+*.pyo
+.coverage
+smit.db
+node_modules/
+.next/
+*.tsbuildinfo
+.env

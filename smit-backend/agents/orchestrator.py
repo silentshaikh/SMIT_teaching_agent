@@ -13,7 +13,7 @@ from sqlalchemy import select
 
 from config import settings
 from models.schemas import AssignmentReport, SubmissionInput
-from models.db_models import StudentModel, SubmissionModel, ReportModel
+from models.db_models import StudentModel, SubmissionModel, ReportModel, RubricVersionModel
 from db.session import AsyncSessionLocal, init_db
 
 from agents.code_review import code_review_agent
@@ -88,11 +88,26 @@ async def process_submission(submission_id: str, input_data: SubmissionInput) ->
             db_submission = SubmissionModel(
                 id=submission_id,
                 student_id=input_data.student_id,
+                assignment_id=input_data.assignment_id,
                 file_name=f"{input_data.assignment_name}.{input_data.language}",
                 language=input_data.language,
+                source_code=input_data.code,
                 code_hash=_hash_code(input_data.code),
                 status="processing",
             )
+
+            # Resolve rubric_version_id if rubric_id is provided
+            if input_data.rubric_id:
+                ver_result = await session.execute(
+                    select(RubricVersionModel)
+                    .where(RubricVersionModel.rubric_id == input_data.rubric_id)
+                    .order_by(RubricVersionModel.version_number.desc())
+                    .limit(1)
+                )
+                latest_ver = ver_result.scalar_one_or_none()
+                if latest_ver:
+                    db_submission.rubric_version_id = latest_ver.id
+
             session.add(db_submission)
             await session.commit()
 
@@ -106,6 +121,9 @@ async def process_submission(submission_id: str, input_data: SubmissionInput) ->
             }),
         )
         cr = review_result.final_output
+        # Assign stable IDs to each mistake
+        for i, m in enumerate(cr.mistakes):
+            m.id = f"m{i+1}"
 
         tutor_result = await _run_with_retry(
             tutor_agent,

@@ -3,6 +3,19 @@ import '@testing-library/jest-dom'
 import { MistakeList } from '@/components/MistakeList'
 import type { MistakeItem } from '@/lib/types'
 
+jest.mock('@tanstack/react-query', () => ({
+  useMutation: () => ({
+    mutate: jest.fn(),
+    isPending: false,
+    isError: false,
+    error: null,
+  }),
+}))
+
+jest.mock('@/lib/api', () => ({
+  reverifyMistake: jest.fn(),
+}))
+
 // TC-033
 test('TC-033: renders empty state for no mistakes', () => {
   render(<MistakeList mistakes={[]} />)
@@ -13,6 +26,7 @@ test('TC-033: renders empty state for no mistakes', () => {
 test('TC-034: renders single mistake', () => {
   const mistakes: MistakeItem[] = [
     {
+      id: 'm1',
       type: 'syntax',
       line: 5,
       description: 'Missing semicolon',
@@ -29,6 +43,7 @@ test('TC-034: renders single mistake', () => {
 test('TC-035: renders mistake type badge', () => {
   const mistakes: MistakeItem[] = [
     {
+      id: 'm2',
       type: 'logic',
       line: 10,
       description: 'Wrong condition',
@@ -44,6 +59,7 @@ test('TC-035: renders mistake type badge', () => {
 test('TC-036: renders line number', () => {
   const mistakes: MistakeItem[] = [
     {
+      id: 'm3',
       type: 'naming',
       line: 42,
       description: 'Bad variable name',
@@ -59,6 +75,7 @@ test('TC-036: renders line number', () => {
 test('TC-037: renders corrected snippet when present', () => {
   const mistakes: MistakeItem[] = [
     {
+      id: 'm4',
       type: 'syntax',
       line: 3,
       description: 'Error',
@@ -73,9 +90,9 @@ test('TC-037: renders corrected snippet when present', () => {
 // TC-038
 test('TC-038: renders multiple mistakes', () => {
   const mistakes: MistakeItem[] = [
-    { type: 'syntax', line: 1, description: 'Err1', description_urdu: 'خرابی1', corrected_snippet: null },
-    { type: 'logic', line: 2, description: 'Err2', description_urdu: 'خرابی2', corrected_snippet: null },
-    { type: 'style', line: 3, description: 'Err3', description_urdu: 'خرابی3', corrected_snippet: null },
+    { id: 'm5', type: 'syntax', line: 1, description: 'Err1', description_urdu: 'خرابی1', corrected_snippet: null },
+    { id: 'm6', type: 'logic', line: 2, description: 'Err2', description_urdu: 'خرابی2', corrected_snippet: null },
+    { id: 'm7', type: 'style', line: 3, description: 'Err3', description_urdu: 'خرابی3', corrected_snippet: null },
   ]
   render(<MistakeList mistakes={mistakes} />)
   expect(screen.getByText('Err1')).toBeInTheDocument()

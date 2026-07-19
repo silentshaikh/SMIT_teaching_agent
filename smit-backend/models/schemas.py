@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from typing import Literal
 from uuid import UUID
 from datetime import datetime
@@ -7,6 +7,7 @@ from datetime import datetime
 # ── Core input ─────────────────────────────────────
 class SubmissionInput(BaseModel):
     student_id: str
+    assignment_id: str | None = None
     assignment_name: str
     language: Literal["javascript", "python", "html"]
     code: str                    # raw source code string
@@ -15,6 +16,7 @@ class SubmissionInput(BaseModel):
 
 # ── Agent output models ─────────────────────────────
 class MistakeItem(BaseModel):
+    id: str = ""
     line: int | None
     type: Literal["syntax", "logic", "naming", "structure", "style"]
     description: str             # English explanation
@@ -43,6 +45,7 @@ class RubricScore(BaseModel):
 class FeedbackOutput(BaseModel):
     suggestions: list[str]       # 3-5 personalized items
     next_topics: list[str]       # what to study next
+    practice_suggestions: list[str] = []  # Phase 1.4
 
 
 # ── Final unified report ────────────────────────────
@@ -61,6 +64,10 @@ class AssignmentReport(BaseModel):
     breakdown: dict[str, int]
     processing_time_ms: int
     created_at: datetime
+    override_score: int | None = None
+    override_note: str | None = None
+    overridden_by: str | None = None
+    overridden_at: datetime | None = None
 
 
 # ── DB models (SQLAlchemy, mirrors above) ───────────
@@ -72,6 +79,29 @@ class Student(BaseModel):
     created_at: datetime
 
 
+class Teacher(BaseModel):
+    id: str
+    name: str
+    email: str
+    created_at: datetime
+
+
+class Course(BaseModel):
+    id: str
+    name: str
+    batch: str
+    created_at: datetime
+
+
+class Assignment(BaseModel):
+    id: str
+    course_id: str
+    name: str
+    rubric_id: str | None
+    due_date: datetime | None
+    created_at: datetime
+
+
 class Rubric(BaseModel):
     id: str
     assignment_name: str
@@ -79,6 +109,16 @@ class Rubric(BaseModel):
     criteria: dict[str, int]      # criterion -> max points
     max_score: int
     created_by: str
+
+
+class RubricVersion(BaseModel):
+    id: str
+    rubric_id: str
+    version_number: int
+    criteria: dict[str, int]
+    max_score: int
+    created_by: str
+    created_at: datetime
 
 
 # ── API response models ─────────────────────────────
@@ -100,6 +140,7 @@ class HistoryItem(BaseModel):
     score: int | None
     grade: str | None
     status: str
+    course_name: str | None = None
     created_at: datetime
 
 
@@ -116,9 +157,117 @@ class RubricCreate(BaseModel):
     created_by: str
 
 
+class CourseStats(BaseModel):
+    course_id: str
+    course_name: str
+    total_submissions: int
+    average_score: float
+
+
 class DashboardStats(BaseModel):
     batch: str
     total_students: int
     total_submissions: int
     average_score: float
     grade_distribution: dict[str, int]
+    courses: list[CourseStats] = []
+
+
+class LoginRequest(BaseModel):
+    email: str
+    password: str
+
+
+class RegisterRequest(BaseModel):
+    email: str
+    password: str = Field(min_length=6)
+    name: str = Field(min_length=2, max_length=128)
+    role: Literal["student", "teacher"]
+    batch: str | None = None
+
+
+class LoginResponse(BaseModel):
+    token: str
+    role: Literal["student", "teacher"]
+    user_id: str
+    name: str
+
+
+# ── Phase 1 schemas ──────────────────────────────────
+class ProgressPoint(BaseModel):
+    submission_id: str
+    created_at: datetime
+    score: int | None
+    grade: str | None
+
+
+class MistakeFrequency(BaseModel):
+    type: str
+    count: int
+
+
+class StudentProgress(BaseModel):
+    student_id: str
+    time_series: list[ProgressPoint]
+    mistake_type_frequency: list[MistakeFrequency]
+
+
+class QARequest(BaseModel):
+    question: str
+
+
+class QAResponse(BaseModel):
+    question: str
+    answer_en: str
+    answer_urdu: str
+    created_at: str
+
+
+class ReverifyRequest(BaseModel):
+    corrected_snippet: str
+
+
+class ReverifyResponse(BaseModel):
+    passed: bool
+    note: str
+
+
+class Badge(BaseModel):
+    id: str
+    name: str
+    description: str
+    earned: bool
+
+
+# ── Phase 2 schemas ──────────────────────────────────
+class BatchMistakeStat(BaseModel):
+    type: str
+    count: int
+    percentage: float
+
+
+class BatchAnalytics(BaseModel):
+    batch: str
+    total_submissions: int
+    average_score: float
+    mistake_stats: list[BatchMistakeStat]
+    assignment_filter: str | None = None
+    date_from: str | None = None
+    date_to: str | None = None
+
+
+class OverrideRequest(BaseModel):
+    new_score: int = Field(ge=0, le=100)
+    teacher_note: str
+
+
+class RubricVersionComparison(BaseModel):
+    rubric_id: str
+    versions: list[RubricVersion]
+
+
+class BulkSubmitResult(BaseModel):
+    total: int
+    submitted: int
+    failed: int
+    results: list[dict]

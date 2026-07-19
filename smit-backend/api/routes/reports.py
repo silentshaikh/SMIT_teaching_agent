@@ -5,9 +5,9 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from models.schemas import AssignmentReport, HistoryItem
-from models.db_models import SubmissionModel, ReportModel
+from models.db_models import SubmissionModel, ReportModel, AssignmentModel, CourseModel
 from db.session import get_session
-from api.routes.admin import verify_token
+from api.routes.auth import verify_token
 
 router = APIRouter(prefix="/api/v1", tags=["reports"])
 
@@ -50,25 +50,31 @@ async def get_report(
 async def get_history(
     student_id: str,
     session: AsyncSession = Depends(get_session),
-    _: dict = Depends(verify_token),
+    user: dict = Depends(verify_token),
 ):
+    # Students can only view their own history
+    if user.get("role") == "student" and user.get("sub") != student_id:
+        raise HTTPException(403, "Cannot view other students' history")
     result = await session.execute(
-        select(SubmissionModel, ReportModel)
+        select(SubmissionModel, ReportModel, AssignmentModel, CourseModel)
         .outerjoin(ReportModel, SubmissionModel.id == ReportModel.submission_id)
+        .outerjoin(AssignmentModel, SubmissionModel.assignment_id == AssignmentModel.id)
+        .outerjoin(CourseModel, AssignmentModel.course_id == CourseModel.id)
         .where(SubmissionModel.student_id == student_id)
         .order_by(SubmissionModel.created_at.desc())
     )
     rows = result.all()
     items = []
-    for sub, rep in rows:
+    for sub, rep, assignment, course in rows:
         items.append(
             HistoryItem(
                 submission_id=sub.id,
-                assignment_name=sub.file_name.replace(f".{sub.language}", ""),
+                assignment_name=assignment.name if assignment else sub.file_name.replace(f".{sub.language}", ""),
                 language=sub.language,
                 score=rep.score if rep else None,
                 grade=rep.grade if rep else None,
                 status=sub.status,
+                course_name=course.name if course else None,
                 created_at=sub.created_at,
             )
         )

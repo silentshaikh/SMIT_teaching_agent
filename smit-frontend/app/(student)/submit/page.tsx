@@ -1,13 +1,15 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import gsap from "gsap";
 import { FileUploader } from "@/components/FileUploader";
+import { BulkUploader } from "@/components/BulkUploader";
 
 export default function SubmitPage() {
   const headerRef = useRef<HTMLDivElement>(null);
   const formRef = useRef<HTMLDivElement>(null);
   const infoRef = useRef<HTMLDivElement>(null);
+  const [mode, setMode] = useState<"single" | "bulk">("single");
 
   useEffect(() => {
     const ctx = gsap.context(() => {
@@ -53,9 +55,29 @@ export default function SubmitPage() {
           </p>
         </div>
 
+        {/* Mode toggle */}
+        <div className="flex gap-2">
+          <button
+            onClick={() => setMode("single")}
+            className={`cyber-btn text-[10px] px-4 py-2 h-auto ${
+              mode === "single" ? "" : "opacity-40"
+            }`}
+          >
+            Single Upload
+          </button>
+          <button
+            onClick={() => setMode("bulk")}
+            className={`cyber-btn text-[10px] px-4 py-2 h-auto ${
+              mode === "bulk" ? "" : "opacity-40"
+            }`}
+          >
+            Bulk Upload (Teacher)
+          </button>
+        </div>
+
         <div className="grid md:grid-cols-5 gap-6">
           <div ref={formRef} className="md:col-span-3 cyber-panel p-6 lg:p-8 animate-on-scroll">
-            <FileUploader />
+            {mode === "single" ? <FileUploader /> : <BulkUploader />}
           </div>
 
           <div ref={infoRef} className="md:col-span-2 cyber-panel p-6 lg:p-8 space-y-4">
@@ -82,6 +104,15 @@ export default function SubmitPage() {
                 <li>Get instant feedback &amp; score</li>
               </ol>
             </div>
+            {mode === "bulk" && (
+              <div className="border-t border-cyber-purple/20 pt-4">
+                <h4 className="font-heading font-semibold text-cyber-purple mb-2">Bulk Mode</h4>
+                <p className="text-sm text-cyber-green/60">
+                  Upload a .zip file containing student submissions. Each file is processed independently.
+                  Student identifiers are extracted from filenames (e.g., <code className="text-cyber-purple/80">student123_app.js</code>).
+                </p>
+              </div>
+            )}
           </div>
         </div>
       </div>
