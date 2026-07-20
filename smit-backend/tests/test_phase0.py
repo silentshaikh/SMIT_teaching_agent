@@ -248,9 +248,12 @@ def test_submit_stores_source_code(mock_orch, client, sample_js_code):
                 assert len(sub.source_code) > 0
     import asyncio
 
+    from api.routes.auth import create_token
+    token = create_token("src-test", "student", "src-test@test.com")
     r = client.post(
         "/api/v1/submit",
-        data={"student_id": "src-test", "assignment_name": "HW1", "rubric_id": "r1"},
+        headers={"Authorization": f"Bearer {token}"},
+        data={"assignment_name": "HW1", "rubric_id": "r1"},
         files={"file": ("app.js", sample_js_code, "text/javascript")},
     )
     assert r.status_code in [200, 202]

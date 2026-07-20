@@ -4,15 +4,15 @@ import { useEffect, useRef } from "react";
 import gsap from "gsap";
 import { useQuery } from "@tanstack/react-query";
 import { getStudentProgress } from "@/lib/api";
+import { useSubmissionStore } from "@/store/submission";
 
 export default function ProgressPage() {
   const headerRef = useRef<HTMLDivElement>(null);
   const chartRef = useRef<HTMLDivElement>(null);
   const mistakeRef = useRef<HTMLDivElement>(null);
 
-  const studentId = typeof window !== "undefined"
-    ? new URLSearchParams(window.location.search).get("student_id") || "student-1"
-    : "student-1";
+  const userId = useSubmissionStore((s) => s.userId);
+  const studentId = userId || "student-1";
 
   const { data, isLoading } = useQuery({
     queryKey: ["progress", studentId],
@@ -65,7 +65,7 @@ export default function ProgressPage() {
 
         {isLoading && (
           <div className="cyber-panel p-6 text-center">
-            <span className="font-michroma text-xs tracking-widest text-cyber-green/50 animate-pulse-neon uppercase">
+            <span className="font-syncopate text-xs tracking-widest text-cyber-green/50 animate-pulse-neon uppercase">
               Loading Growth Data...
             </span>
           </div>

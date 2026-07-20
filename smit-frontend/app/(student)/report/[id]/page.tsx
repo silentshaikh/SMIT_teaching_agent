@@ -9,8 +9,118 @@ import { MistakeList } from "@/components/MistakeList";
 import { CodeViewer } from "@/components/CodeViewer";
 import { useReportPoller } from "@/lib/hooks/useReportPoller";
 import { useSubmissionStore } from "@/store/submission";
-import { downloadReport, submitFile, askQuestion, getQAHistory } from "@/lib/api";
+import { downloadReport, submitFile, askQuestion, getQAHistory, updateSubmission } from "@/lib/api";
+import { CyberToggle } from "@/components/CyberToggle";
 import type { AssignmentReport, QAPair } from "@/lib/types";
+
+function UpdateSection({
+  submissionId,
+  currentCode,
+  currentLanguage,
+  onSuccess,
+}: {
+  submissionId: string;
+  currentCode: string;
+  currentLanguage: string;
+  onSuccess: (newId: string) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const [mode, setMode] = useState<"code" | "url">("code");
+  const [code, setCode] = useState(currentCode);
+  const [url, setUrl] = useState("");
+  const [error, setError] = useState<string | null>(null);
+
+  const mutation = useMutation({
+    mutationFn: () =>
+      updateSubmission(submissionId, mode === "url" ? { url } : { code }),
+    onSuccess: (data) => {
+      setOpen(false);
+      onSuccess(data.submission_id);
+    },
+    onError: (err: Error) => {
+      setError(err instanceof Error ? err.message : "Update failed");
+    },
+  });
+
+  return (
+    <section className="cyber-panel p-6 gsap-section">
+      <div className="flex items-center gap-3 mb-4">
+        <span className="font-syncopate text-xs tracking-[0.3em] text-cyber-cyan uppercase">
+          &gt;&gt; Update Submission
+        </span>
+        <span className="flex-1 border-t border-cyber-cyan/20" />
+        <button
+          onClick={() => setOpen(true)}
+          className="cyber-btn text-[10px] px-4 py-1.5 h-auto"
+        >
+          &gt;&gt; Edit &amp; Resubmit
+        </button>
+      </div>
+      <p className="font-body text-sm text-white/50">
+        Found a mistake in your submission? Update your code and re-run the analysis.
+      </p>
+
+      {open && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm mt-16">
+          <div className="cyber-panel p-8 max-w-lg w-full mx-4 space-y-5 max-h-[80vh] overflow-y-auto">
+            <h3 className="font-heading text-lg text-cyber-green">Update Submission</h3>
+
+            {error && (
+              <div className="border border-cyber-crimson bg-cyber-crimson/10 p-3 text-sm text-cyber-crimson">
+                {error}
+              </div>
+            )}
+
+            {/* Mode toggle */}
+            <CyberToggle
+              options={[
+                { value: "code", label: "Paste Code", color: "green" },
+                { value: "url", label: "Paste URL", color: "cyan" },
+              ]}
+              value={mode}
+              onChange={(v) => setMode(v as "code" | "url")}
+              fullWidth
+            />
+
+            {mode === "code" ? (
+              <textarea
+                value={code}
+                onChange={(e) => setCode(e.target.value)}
+                className="cyber-input w-full h-48 font-space-mono text-xs resize-y"
+                placeholder="Paste your updated code here..."
+              />
+            ) : (
+              <input
+                type="url"
+                value={url}
+                onChange={(e) => setUrl(e.target.value)}
+                className="cyber-input"
+                placeholder="> https://github.com/user/repo/blob/main/app.py"
+              />
+            )}
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => setOpen(false)}
+                className="flex-1 py-3 border border-white/20 text-white/60 font-syncopate text-[10px] tracking-widest uppercase hover:border-white/40 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => mutation.mutate()}
+                disabled={mutation.isPending || (mode === "code" && !code.trim()) || (mode === "url" && !url.trim())}
+                className="flex-1 cyber-btn disabled:opacity-30"
+                style={{ height: 44 }}
+              >
+                {mutation.isPending ? ">> UPDATING..." : ">> SUBMIT UPDATE"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </section>
+  );
+}
 
 function QAPanel({ submissionId }: { submissionId: string }) {
   const [question, setQuestion] = useState("");
@@ -38,11 +148,11 @@ function QAPanel({ submissionId }: { submissionId: string }) {
           {qaHistory.map((pair: QAPair, i: number) => (
             <div key={i} className="border border-cyber-green/10 p-3 space-y-2">
               <p className="font-body text-sm text-cyber-cyan/80">
-                <span className="font-michroma text-[10px] text-cyber-cyan/50 mr-2">Q:</span>
+                <span className="font-syncopate text-[10px] text-cyber-cyan/50 mr-2">Q:</span>
                 {pair.question}
               </p>
               <p className="font-body text-sm text-cyber-green/70">
-                <span className="font-michroma text-[10px] text-cyber-green/50 mr-2">A:</span>
+                <span className="font-syncopate text-[10px] text-cyber-green/50 mr-2">A:</span>
                 {pair.answer_en}
               </p>
               <p className="font-body text-xs text-cyber-purple/60" dir="rtl">
@@ -92,7 +202,7 @@ function ReportSkeleton() {
     <main className="min-h-screen bg-cyber-black flex items-center justify-center p-4">
       <div className="flex flex-col items-center gap-6">
         <div className="w-8 h-8 border-2 border-cyber-green/50 border-t-cyber-green animate-spin" />
-        <span className="font-michroma text-xs tracking-[0.3em] text-cyber-green animate-pulse-neon uppercase">
+        <span className="font-syncopate text-xs tracking-[0.3em] text-cyber-green animate-pulse-neon uppercase">
           Analyzing Neural Pathways...
         </span>
       </div>
@@ -179,7 +289,7 @@ export default function ReportPage() {
       const ext = language === "python" ? ".py" : language === "html" ? ".html" : ".js";
       const blob = new Blob([originalCode], { type: "text/plain" });
       const file = new File([blob], `resubmit${ext}`, { type: "text/plain" });
-      return submitFile(file, studentId, assignmentName, rubricId);
+      return submitFile(file, assignmentName, rubricId);
     },
     onSuccess: (response) => {
       setSubmissionId(response.submission_id);
@@ -314,7 +424,7 @@ export default function ReportPage() {
                 {report.next_topics.map((t: string, i: number) => (
                   <span
                     key={i}
-                    className="border border-cyber-green/30 bg-cyber-black px-4 py-1.5 font-michroma text-[10px] tracking-widest text-cyber-green/80 uppercase"
+                    className="border border-cyber-green/30 bg-cyber-black px-4 py-1.5 font-syncopate text-[10px] tracking-widest text-cyber-green/80 uppercase"
                   >
                     {t}
                   </span>
@@ -364,7 +474,7 @@ export default function ReportPage() {
               <ul className="space-y-2">
                 {report.suggestions.map((s: string, i: number) => (
                   <li key={i} className="font-body text-cyber-green/70 flex items-start gap-3 animate-on-scroll">
-                    <span className="text-cyber-purple mt-0.5 font-michroma font-bold">&gt;</span>
+                    <span className="text-cyber-purple mt-0.5 font-syncopate font-bold">&gt;</span>
                     {s}
                   </li>
                 ))}
@@ -388,7 +498,7 @@ export default function ReportPage() {
                   key={i}
                   className="border border-cyber-green/20 bg-cyber-black p-4 flex items-start gap-3"
                 >
-                  <span className="text-cyber-green font-michroma font-bold mt-0.5">&gt;</span>
+                  <span className="text-cyber-green font-syncopate font-bold mt-0.5">&gt;</span>
                   <span className="font-body text-sm text-cyber-green/70">{s}</span>
                 </div>
               ))}
@@ -398,6 +508,18 @@ export default function ReportPage() {
 
         {/* Phase 1.2: Q&A Panel */}
         <QAPanel submissionId={submissionId} />
+
+        {/* Update Submission Section */}
+        <UpdateSection
+          submissionId={submissionId}
+          currentCode={originalCode}
+          currentLanguage={language}
+          onSuccess={(newId) => {
+            setSubmissionId(newId);
+            setStatus("processing");
+            router.replace(`/report/${newId}`);
+          }}
+        />
 
         {/* Footer */}
         <div className="cyber-panel p-3 gsap-section">
@@ -417,7 +539,7 @@ export default function ReportPage() {
           </div>
           {downloadMutation.isError && (
             <div className="mt-2 border border-cyber-crimson bg-cyber-crimson/10 p-2 flex items-center gap-2">
-              <span className="text-cyber-crimson font-michroma text-[9px]">&gt;&gt;</span>
+              <span className="text-cyber-crimson font-syncopate text-[9px]">&gt;&gt;</span>
               <span className="font-syncopate text-[9px] tracking-widest text-cyber-crimson uppercase">
                 DOWNLOAD FAILED: {downloadMutation.error?.message}
               </span>

@@ -361,9 +361,12 @@ async def test_invalid_file_rejected(mock_init_db):
     from api.main import app
 
     with TestClient(app) as client:
+        from api.routes.auth import create_token
+        token = create_token("s10", "student", "s10@test.com")
         r = client.post(
             "/api/v1/submit",
-            data={"student_id": "s10", "assignment_name": "W1", "rubric_id": "r1"},
+            headers={"Authorization": f"Bearer {token}"},
+            data={"assignment_name": "W1", "rubric_id": "r1"},
             files={"file": ("hack.exe", b"MZ\x90\x00", "application/octet-stream")},
         )
         assert r.status_code in [400, 413, 422]
@@ -472,8 +475,8 @@ async def test_source_code_saved(mock_init_db, mock_retry):
 @pytest.mark.asyncio
 @patch("agents.orchestrator._run_with_retry", new_callable=AsyncMock)
 @patch("agents.orchestrator.init_db", new_callable=AsyncMock)
-async def test_new_student_auto_created(mock_init_db, mock_retry):
-    """TC-PROD-015: Unknown student_id should auto-create student in DB."""
+async def test_unknown_student_rejected(mock_init_db, mock_retry):
+    """TC-PROD-015: Unknown student_id should fail, not auto-create."""
     mock_retry.side_effect = _default_run
 
     sid = str(uuid4())
@@ -483,14 +486,7 @@ async def test_new_student_auto_created(mock_init_db, mock_retry):
         code=GOOD_JS, rubric_id="r1",
     )
     report = await process_submission(sid, inp)
-    assert report is not None
-
-    async with AsyncSessionLocal() as session:
-        from models.db_models import StudentModel
-        result = await session.execute(select(StudentModel).where(StudentModel.id == new_student_id))
-        student = result.scalar_one_or_none()
-        assert student is not None
-        assert student.email == f"{new_student_id}@smit.edu"
+    assert report is None  # Rejected because student doesn't exist
 
 
 @pytest.mark.asyncio
@@ -572,8 +568,8 @@ async def test_deterministic_score_override(mock_init_db, mock_retry):
         if "Rubric" in name:
             result = MagicMock()
             result.final_output = RubricScore(
-                score=999, grade="A+",
-                breakdown={"cheating": 999},
+                score=50, grade="C",
+                breakdown={"syntax": 25, "logic": 25},
             )
             return result
         return _default_run(agent, inp, **kw)

@@ -59,8 +59,8 @@ export function CyberFooter() {
           ))}
         </div>
         <div className="mt-1 pt-1 border-t border-cyber-green/5 flex items-center justify-between">
-          <span className="font-michroma text-[7px] tracking-[0.3em] text-cyber-green/20 uppercase">
-            SMIT // Agentic Teaching Core
+          <span className="font-syncopate text-[7px] tracking-[0.3em] text-cyber-green/20 uppercase">
+            SYNAPSE // AI Teaching Agent
           </span>
           <span className="font-space-mono text-[7px] text-cyber-green/20">
             {new Date().getFullYear()}

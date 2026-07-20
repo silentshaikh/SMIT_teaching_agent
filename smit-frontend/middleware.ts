@@ -27,7 +27,7 @@ export async function middleware(request: NextRequest) {
     const { payload } = await jwtVerify(token, JWT_SECRET);
     const role = payload.role as string | undefined;
 
-    const isTeacherOnlyRoute = pathname.startsWith("/dashboard") || pathname.startsWith("/rubrics");
+    const isTeacherOnlyRoute = pathname.startsWith("/dashboard") || pathname.startsWith("/rubrics") || pathname.startsWith("/submissions");
     const isStudentOnlyRoute = pathname.startsWith("/history") || pathname.startsWith("/report") || pathname.startsWith("/progress");
 
     if (isTeacherOnlyRoute && role !== "teacher") {

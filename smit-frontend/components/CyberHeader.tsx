@@ -54,7 +54,7 @@ export function CyberHeader() {
         <Link href="/" className="flex items-center gap-3 group">
           <span
             ref={badgeRef}
-            className="inline-flex items-center justify-center w-7 h-7 border border-cyber-green bg-cyber-black text-cyber-green font-michroma text-[9px] tracking-widest"
+            className="inline-flex items-center justify-center w-7 h-7 border border-cyber-green bg-cyber-black text-cyber-green font-syncopate text-[9px] tracking-widest"
             style={{ boxShadow: "0 0 8px rgba(0,255,102,0.2)" }}
           >
             SM
@@ -76,7 +76,7 @@ export function CyberHeader() {
           ))}
           <span className="ml-2 inline-flex items-center gap-1.5 px-2 py-1 border border-cyber-purple/30">
             <span className="w-1.5 h-1.5 bg-cyber-green animate-pulse-neon" />
-            <span className="font-michroma text-[8px] tracking-[0.2em] text-cyber-purple/60 uppercase hidden lg:inline">
+            <span className="font-syncopate text-[8px] tracking-[0.2em] text-cyber-purple/60 uppercase hidden lg:inline">
               v4.2.1
             </span>
           </span>

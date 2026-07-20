@@ -11,7 +11,7 @@ from api.routes.auth import verify_token
 @pytest.fixture(autouse=True)
 def override_auth():
     async def _fake_auth():
-        return {"sub": "admin"}
+        return {"sub": "admin", "role": "teacher"}
     app.dependency_overrides[verify_token] = _fake_auth
     yield
     app.dependency_overrides.clear()
@@ -91,9 +91,10 @@ class TestSubmitEndpoint:
     @pytest.mark.asyncio
     async def test_submit_valid_python(self, client):
         with patch("api.routes.submit.process_submission"):
+            app.dependency_overrides[verify_token] = lambda: {"sub": "s1", "role": "student"}
             content = b"def add(a, b):\n    return a + b\n"
             files = {"file": ("solution.py", content, "text/x-python")}
-            data = {"student_id": "s1", "assignment_name": "hw1", "rubric_id": "r1"}
+            data = {"assignment_name": "hw1", "rubric_id": "r1"}
             resp = await client.post("/api/v1/submit", data=data, files=files)
             assert resp.status_code == 202
             body = resp.json()
@@ -103,17 +104,19 @@ class TestSubmitEndpoint:
 
     @pytest.mark.asyncio
     async def test_submit_invalid_extension(self, client):
+        app.dependency_overrides[verify_token] = lambda: {"sub": "s1", "role": "student"}
         files = {"file": ("notes.txt", b"content", "text/plain")}
-        data = {"student_id": "s1", "assignment_name": "hw1", "rubric_id": "r1"}
+        data = {"assignment_name": "hw1", "rubric_id": "r1"}
         resp = await client.post("/api/v1/submit", data=data, files=files)
         assert resp.status_code == 422
         assert "Invalid file type" in resp.json()["detail"]
 
     @pytest.mark.asyncio
     async def test_submit_file_too_large(self, client):
+        app.dependency_overrides[verify_token] = lambda: {"sub": "s1", "role": "student"}
         content = b"x" * (51 * 1024)
         files = {"file": ("large.py", content, "text/x-python")}
-        data = {"student_id": "s1", "assignment_name": "hw1", "rubric_id": "r1"}
+        data = {"assignment_name": "hw1", "rubric_id": "r1"}
         resp = await client.post("/api/v1/submit", data=data, files=files)
         assert resp.status_code == 413
         assert "too large" in resp.json()["detail"]
@@ -121,11 +124,19 @@ class TestSubmitEndpoint:
     @pytest.mark.asyncio
     async def test_submit_all_allowed_extensions(self, client):
         with patch("api.routes.submit.process_submission"):
+            app.dependency_overrides[verify_token] = lambda: {"sub": "s1", "role": "student"}
             for ext in [".py", ".js", ".html"]:
                 files = {"file": (f"file{ext}", b"content", "application/octet-stream")}
-                data = {"student_id": "s1", "assignment_name": "hw1", "rubric_id": "r1"}
+                data = {"assignment_name": "hw1", "rubric_id": "r1"}
                 resp = await client.post("/api/v1/submit", data=data, files=files)
                 assert resp.status_code == 202, f"Failed for {ext}"
+
+    @pytest.mark.asyncio
+    async def test_submit_rejects_teacher(self, client):
+        files = {"file": ("solution.py", b"def x(): pass", "text/x-python")}
+        data = {"assignment_name": "hw1", "rubric_id": "r1"}
+        resp = await client.post("/api/v1/submit", data=data, files=files)
+        assert resp.status_code == 403
 
 
 class TestReportEndpoint:
@@ -200,7 +211,8 @@ class TestDownloadEndpoint:
 
 class TestAuthFailure:
     @pytest.mark.asyncio
-    async def test_no_token_returns_200(self, client):
+    async def test_no_token_dev_mode_allows_teacher(self, client):
+        """In dev_mode, no token = teacher bypass. Verify it returns 200."""
         app.dependency_overrides.clear()
         resp = await client.get("/api/v1/rubrics")
         assert resp.status_code == 200

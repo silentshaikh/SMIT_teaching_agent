@@ -71,7 +71,7 @@ function MistakeItemCard({ mistake }: { mistake: MistakeItem }) {
       </p>
 
       {mistake.corrected_snippet && (
-        <pre className="mt-3 border border-cyber-green/20 bg-cyber-black p-3 text-xs font-jetbrains text-cyber-green/70 overflow-x-auto">
+        <pre className="mt-3 border border-cyber-green/20 bg-cyber-black p-3 text-xs font-space-mono text-cyber-green/70 overflow-x-auto">
           {mistake.corrected_snippet}
         </pre>
       )}
@@ -89,7 +89,7 @@ function MistakeItemCard({ mistake }: { mistake: MistakeItem }) {
           <textarea
             value={snippet}
             onChange={(e) => { setSnippet(e.target.value); setResult(null); }}
-            className="cyber-input w-full h-24 font-jetbrains text-xs resize-none"
+            className="cyber-input w-full h-24 font-space-mono text-xs resize-none"
             placeholder="Paste your corrected code here..."
           />
           <div className="flex items-center gap-3">
@@ -102,7 +102,7 @@ function MistakeItemCard({ mistake }: { mistake: MistakeItem }) {
             </button>
             {result && (
               <span
-                className={`font-michroma text-[10px] tracking-widest uppercase ${
+                className={`font-syncopate text-[10px] tracking-widest uppercase ${
                   result.passed ? "text-cyber-green" : "text-cyber-crimson"
                 }`}
               >

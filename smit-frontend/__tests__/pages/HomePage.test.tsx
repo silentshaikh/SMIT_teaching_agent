@@ -5,7 +5,7 @@ import HomePage from '../../app/page'
 // TC-001
 test('TC-001: renders main heading with role', () => {
   render(<HomePage />)
-  const heading = screen.getByRole('heading')
+  const heading = screen.getByRole('heading', { level: 1 })
   expect(heading).toBeInTheDocument()
 })
 
@@ -33,14 +33,14 @@ test('TC-004: renders without crashing', () => {
 // TC-005
 test('TC-005: displays site title', () => {
   render(<HomePage />)
-  const title = screen.getByRole('heading')
-  expect(title).toHaveTextContent(/SMIT/i)
+  const title = screen.getByRole('heading', { level: 1 })
+  expect(title).toHaveTextContent(/SYNAPSE/i)
 })
 
 // TC-006
 test('TC-006: has accessible landmark', () => {
   render(<HomePage />)
-  const heading = screen.getByRole('heading')
+  const heading = screen.getByRole('heading', { level: 1 })
   expect(heading.tagName).toBe('H1')
 })
 
@@ -55,4 +55,22 @@ test('TC-008: contains call to action section', () => {
   render(<HomePage />)
   const submitLink = screen.getByRole('link', { name: /submit code/i })
   expect(submitLink).toBeInTheDocument()
+})
+
+// TC-009
+test('TC-009: renders feature cards', () => {
+  render(<HomePage />)
+  expect(screen.getByText('Code Analysis')).toBeInTheDocument()
+  expect(screen.getByText('Instant Grading')).toBeInTheDocument()
+  expect(screen.getByText('AI Tutor')).toBeInTheDocument()
+  expect(screen.getByText('Progress Tracking')).toBeInTheDocument()
+})
+
+// TC-010
+test('TC-010: renders how it works section', () => {
+  render(<HomePage />)
+  expect(screen.getByText('Upload')).toBeInTheDocument()
+  expect(screen.getByText('Analyze')).toBeInTheDocument()
+  expect(screen.getByText('Grade')).toBeInTheDocument()
+  expect(screen.getByText('Improve')).toBeInTheDocument()
 })

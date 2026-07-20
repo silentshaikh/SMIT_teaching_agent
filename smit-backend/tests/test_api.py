@@ -5,6 +5,11 @@ from httpx import AsyncClient
 from fastapi.testclient import TestClient
 
 
+def _make_student_token(student_id: str = "test-student-001") -> str:
+    from api.routes.auth import create_token
+    return create_token(student_id, "student", f"{student_id}@test.com")
+
+
 @pytest.fixture
 def client():
     from api.main import app
@@ -24,10 +29,11 @@ def test_health_endpoint(client):
 def test_submit_valid_js_file(mock_orch, client):
     mock_orch.return_value = str(uuid4())
     js_code = b"const x = 1;"
+    token = _make_student_token()
     r = client.post(
       "/api/v1/submit",
+      headers={"Authorization": f"Bearer {token}"},
       data={
-        "student_id": "s001",
         "assignment_name": "Week 1 JS",
         "rubric_id": "rubric_js_w1"
       },
@@ -39,10 +45,11 @@ def test_submit_valid_js_file(mock_orch, client):
 
 
 def test_submit_invalid_file_type(client):
+    token = _make_student_token()
     r = client.post(
       "/api/v1/submit",
+      headers={"Authorization": f"Bearer {token}"},
       data={
-        "student_id": "s001",
         "assignment_name": "Week 1",
         "rubric_id": "rubric_js_w1"
       },
@@ -53,16 +60,32 @@ def test_submit_invalid_file_type(client):
 
 def test_submit_file_too_large(client):
     big_code = b"x" * 60_000
+    token = _make_student_token()
     r = client.post(
       "/api/v1/submit",
+      headers={"Authorization": f"Bearer {token}"},
       data={
-        "student_id": "s001",
         "assignment_name": "Week 1",
         "rubric_id": "rubric_js_w1"
       },
       files={"file": ("app.js", big_code, "text/javascript")}
     )
     assert r.status_code == 413
+
+
+def test_submit_rejects_teacher(client):
+    from api.routes.auth import create_token
+    teacher_token = create_token("teacher-001", "teacher", "teacher@test.com")
+    r = client.post(
+      "/api/v1/submit",
+      headers={"Authorization": f"Bearer {teacher_token}"},
+      data={
+        "assignment_name": "Week 1 JS",
+        "rubric_id": "rubric_js_w1"
+      },
+      files={"file": ("app.js", b"const x = 1;", "text/javascript")}
+    )
+    assert r.status_code == 403
 
 
 def test_get_report_not_found(client):
@@ -72,6 +95,8 @@ def test_get_report_not_found(client):
 
 
 def test_get_rubrics(client):
-    r = client.get("/api/v1/rubrics")
+    from api.routes.auth import create_token
+    teacher_token = create_token("teacher-001", "teacher", "teacher@test.com")
+    r = client.get("/api/v1/rubrics", headers={"Authorization": f"Bearer {teacher_token}"})
     assert r.status_code == 200
     assert isinstance(r.json(), list)

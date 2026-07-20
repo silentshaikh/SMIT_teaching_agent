@@ -31,7 +31,7 @@ test('TC-017: toggles theme on click', () => {
   const button = screen.getByRole('button')
   act(() => {
     fireEvent.click(button)
-    jest.advanceTimersByTime(200)
+    jest.advanceTimersByTime(700)
   })
   const theme = document.documentElement.getAttribute('data-theme')
   expect(theme).toBe('light')
@@ -43,11 +43,11 @@ test('TC-018: toggles back on second click', () => {
   const button = screen.getByRole('button')
   act(() => {
     fireEvent.click(button)
-    jest.advanceTimersByTime(200)
+    jest.advanceTimersByTime(700)
   })
   act(() => {
     fireEvent.click(button)
-    jest.advanceTimersByTime(200)
+    jest.advanceTimersByTime(700)
   })
   const theme = document.documentElement.getAttribute('data-theme')
   expect(theme).toBe('dark')

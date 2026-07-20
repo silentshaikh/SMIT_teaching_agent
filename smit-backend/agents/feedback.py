@@ -1,6 +1,4 @@
-import asyncio
-
-from agents import Agent, Runner, function_tool
+from agents import Agent, function_tool
 from agents.config import get_model, PRIMARY_MODEL
 
 from models.schemas import FeedbackOutput
@@ -30,13 +28,6 @@ def _build_plan(mistakes_summary: str, history_summary: str) -> str:
 
 get_student_history = function_tool(_get_student_history)
 build_plan = function_tool(_build_plan)
-
-
-async def run_feedback(code_review, tutor, rubric, student_id):
-    result = Runner.run(feedback_agent, input=student_id, max_turns=20)
-    if asyncio.iscoroutine(result):
-        result = await result
-    return result.final_output
 
 
 feedback_agent = Agent[None](

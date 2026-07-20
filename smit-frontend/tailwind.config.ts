@@ -35,11 +35,11 @@ const config: Config = {
         heading: ["var(--font-heading)", "sans-serif"],
         body: ["var(--font-body)", "sans-serif"],
         orbitron: ["Orbitron", "monospace"],
-        syncopate: ["Syncopate", "sans-serif"],
         michroma: ["Michroma", "sans-serif"],
-        "share-tech": ["Share Tech Mono", "monospace"],
-        "space-mono": ["Space Mono", "monospace"],
-        jetbrains: ["JetBrains Mono", "monospace"],
+        "jetbrains": ["JetBrains Mono", "monospace"],
+        // Legacy aliases for backward compatibility
+        syncopate: ["Michroma", "sans-serif"],
+        "space-mono": ["JetBrains Mono", "monospace"],
       },
       animation: {
         "pulse-neon": "pulseNeon 2s ease-in-out infinite",
@@ -48,8 +48,15 @@ const config: Config = {
         "border-flash": "borderFlash 0.8s ease-in-out infinite",
         "iris-open": "irisOpen 1.2s ease-out forwards",
         "gradient-shift": "gradientShift 4s ease infinite",
+        "spin-slow": "spin 3s linear infinite",
+        "gradient-flow": "gradientFlow 4s linear infinite",
+        "glow-pulse": "glowPulse 2s ease-in-out infinite",
       },
       keyframes: {
+        spin: {
+          from: { transform: "rotate(0deg)" },
+          to: { transform: "rotate(360deg)" },
+        },
         pulseNeon: {
           "0%, 100%": { opacity: "1", filter: "brightness(1)" },
           "50%": { opacity: "0.7", filter: "brightness(1.5)" },
@@ -77,6 +84,14 @@ const config: Config = {
           "0%": { backgroundPosition: "0% center" },
           "50%": { backgroundPosition: "100% center" },
           "100%": { backgroundPosition: "0% center" },
+        },
+        gradientFlow: {
+          "0%": { backgroundPosition: "0% center" },
+          "100%": { backgroundPosition: "300% center" },
+        },
+        glowPulse: {
+          "0%, 100%": { filter: "brightness(1)" },
+          "50%": { filter: "brightness(1.2)" },
         },
       },
     },

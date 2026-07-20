@@ -19,9 +19,9 @@ test('TC-FOOTER-02: renders model version', () => {
   expect(screen.getByText(/v4.2.1/)).toBeInTheDocument()
 })
 
-test('TC-FOOTER-03: renders SMIT branding', () => {
+test('TC-FOOTER-03: renders SYNAPSE branding', () => {
   render(<CyberFooter />)
-  expect(screen.getByText(/SMIT/i)).toBeInTheDocument()
+  expect(screen.getByText(/SYNAPSE/i)).toBeInTheDocument()
 })
 
 test('TC-FOOTER-04: renders current year', () => {

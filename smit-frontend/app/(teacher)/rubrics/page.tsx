@@ -71,7 +71,7 @@ export default function RubricsPage() {
                   {rubric.assignment_name}
                 </h2>
                 <div className="flex items-center gap-2">
-                  <span className="border border-cyber-purple/40 px-3 py-1 font-michroma text-[10px] tracking-widest text-cyber-purple uppercase">
+                  <span className="border border-cyber-purple/40 px-3 py-1 font-syncopate text-[10px] tracking-widest text-cyber-purple uppercase">
                     {rubric.language}
                   </span>
                   <button

@@ -20,7 +20,7 @@ const MonacoDiffEditor = dynamic(
     ssr: false,
     loading: () => (
       <div className="flex items-center justify-center h-[260px] border border-cyber-green/20 bg-cyber-black">
-        <span className="font-share-tech text-sm tracking-widest text-cyber-green/50 animate-pulse-neon">
+        <span className="font-space-mono text-sm tracking-widest text-cyber-green/50 animate-pulse-neon">
           LOADING EDITOR...
         </span>
       </div>

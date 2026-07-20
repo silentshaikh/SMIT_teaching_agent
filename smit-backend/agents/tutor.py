@@ -1,6 +1,4 @@
-import asyncio
-
-from agents import Agent, Runner, function_tool
+from agents import Agent, function_tool
 from agents.config import get_model, PRIMARY_MODEL
 
 from models.schemas import TutorOutput
@@ -41,13 +39,6 @@ def _translate_roman_urdu(text: str) -> str:
 
 explain_concept = function_tool(_explain_concept)
 translate_roman_urdu = function_tool(_translate_roman_urdu)
-
-
-async def run_tutor(input_data):
-    result = Runner.run(tutor_agent, input=input_data, max_turns=20)
-    if asyncio.iscoroutine(result):
-        result = await result
-    return result.final_output
 
 
 tutor_agent = Agent[None](

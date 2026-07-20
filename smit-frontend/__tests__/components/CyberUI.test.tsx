@@ -46,7 +46,7 @@ test("TC-CYBERUI-01: renders without crashing", () => {
 
 test("TC-CYBERUI-02: renders title text", () => {
   render(<CyberUI />);
-  expect(screen.getByText(/SMIT \/\/ AI TEACHING CORE/)).toBeInTheDocument();
+  expect(screen.getByText(/SYNAPSE AI TEACHING AGENT/)).toBeInTheDocument();
 });
 
 test("TC-CYBERUI-03: renders subtitle text", () => {
@@ -56,14 +56,14 @@ test("TC-CYBERUI-03: renders subtitle text", () => {
 
 test("TC-CYBERUI-04: renders submit and history links", () => {
   render(<CyberUI />);
-  expect(screen.getByText("[ SUBMIT CODE ]")).toBeInTheDocument();
-  expect(screen.getByText("[ VIEW HISTORY ]")).toBeInTheDocument();
+  expect(screen.getByText(/SUBMIT CODE/)).toBeInTheDocument();
+  expect(screen.getByText(/VIEW HISTORY/)).toBeInTheDocument();
 });
 
 test("TC-CYBERUI-05: links have correct hrefs", () => {
   render(<CyberUI />);
-  const submitLink = screen.getByText("[ SUBMIT CODE ]").closest("a");
-  const historyLink = screen.getByText("[ VIEW HISTORY ]").closest("a");
+  const submitLink = screen.getByText(/SUBMIT CODE/).closest("a");
+  const historyLink = screen.getByText(/VIEW HISTORY/).closest("a");
   expect(submitLink).toHaveAttribute("href", "/submit");
   expect(historyLink).toHaveAttribute("href", "/history");
 });
@@ -82,8 +82,7 @@ test("TC-CYBERUI-07: renders boot screen", () => {
   expect(screen.getByText("BOOT")).toBeInTheDocument();
 });
 
-test("TC-CYBERUI-08: has mouse move handler", () => {
-  const { container } = render(<CyberUI />);
-  const root = container.firstChild as HTMLElement;
-  expect(root.onmousemove).toBeDefined();
+test("TC-CYBERUI-08: renders diagnostics panel", () => {
+  render(<CyberUI />);
+  expect(screen.getByText(/System Diagnostics/)).toBeInTheDocument();
 });

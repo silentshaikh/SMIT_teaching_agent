@@ -11,7 +11,7 @@ from models.db_models import (
     StudentModel, CourseModel, AssignmentModel,
 )
 from db.session import get_session
-from api.routes.auth import verify_token
+from api.dependencies import require_teacher
 
 router = APIRouter(prefix="/api/v1", tags=["admin"])
 
@@ -27,7 +27,7 @@ async def health():
 async def list_courses(
     batch: str | None = None,
     session: AsyncSession = Depends(get_session),
-    _: dict = Depends(verify_token),
+    _: dict = Depends(require_teacher),
 ):
     q = select(CourseModel)
     if batch:
@@ -44,7 +44,7 @@ async def list_courses(
 async def create_course(
     body: dict,
     session: AsyncSession = Depends(get_session),
-    _: dict = Depends(verify_token),
+    _: dict = Depends(require_teacher),
 ):
     db_course = CourseModel(name=body["name"], batch=body["batch"])
     session.add(db_course)
@@ -59,7 +59,7 @@ async def create_course(
 async def list_assignments(
     course_id: str | None = None,
     session: AsyncSession = Depends(get_session),
-    _: dict = Depends(verify_token),
+    _: dict = Depends(require_teacher),
 ):
     q = select(AssignmentModel)
     if course_id:
@@ -79,7 +79,7 @@ async def list_assignments(
 async def create_assignment(
     body: dict,
     session: AsyncSession = Depends(get_session),
-    _: dict = Depends(verify_token),
+    _: dict = Depends(require_teacher),
 ):
     db_assignment = AssignmentModel(
         course_id=body["course_id"],
@@ -102,7 +102,7 @@ async def create_assignment(
 @router.get("/rubrics", response_model=list[Rubric])
 async def list_rubrics(
     session: AsyncSession = Depends(get_session),
-    _: dict = Depends(verify_token),
+    _: dict = Depends(require_teacher),
 ):
     result = await session.execute(select(RubricModel))
     rows = result.scalars().all()
@@ -123,7 +123,7 @@ async def list_rubrics(
 async def create_rubric(
     body: RubricCreate,
     session: AsyncSession = Depends(get_session),
-    _: dict = Depends(verify_token),
+    _: dict = Depends(require_teacher),
 ):
     db_rubric = RubricModel(
         name=body.name,
@@ -165,7 +165,7 @@ async def update_rubric(
     rubric_id: str,
     body: RubricCreate,
     session: AsyncSession = Depends(get_session),
-    _: dict = Depends(verify_token),
+    _: dict = Depends(require_teacher),
 ):
     result = await session.execute(select(RubricModel).where(RubricModel.id == rubric_id))
     db_rubric = result.scalar_one_or_none()
@@ -216,7 +216,7 @@ async def update_rubric(
 async def list_rubric_versions(
     rubric_id: str,
     session: AsyncSession = Depends(get_session),
-    _: dict = Depends(verify_token),
+    _: dict = Depends(require_teacher),
 ):
     result = await session.execute(
         select(RubricVersionModel)
@@ -238,7 +238,7 @@ async def list_rubric_versions(
 async def compare_rubric_versions(
     rubric_id: str,
     session: AsyncSession = Depends(get_session),
-    _: dict = Depends(verify_token),
+    _: dict = Depends(require_teacher),
 ):
     """Compare average scores across rubric versions."""
     ver_result = await session.execute(
@@ -280,7 +280,7 @@ async def compare_rubric_versions(
 async def dashboard(
     batch: str,
     session: AsyncSession = Depends(get_session),
-    _: dict = Depends(verify_token),
+    _: dict = Depends(require_teacher),
 ):
     student_count_result = await session.execute(
         select(func.count(StudentModel.id)).where(StudentModel.batch == batch)

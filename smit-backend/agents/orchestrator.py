@@ -76,14 +76,9 @@ async def process_submission(submission_id: str, input_data: SubmissionInput) ->
             )
             student = result.scalar_one_or_none()
             if student is None:
-                student = StudentModel(
-                    id=input_data.student_id,
-                    name=input_data.student_id,
-                    email=f"{input_data.student_id}@smit.edu",
-                    batch="SMIT-Batch-42",
-                )
-                session.add(student)
-                await session.commit()
+                logger.error("Student %s not found — cannot process submission", input_data.student_id)
+                await _mark_failed(submission_id, start)
+                return None
 
             db_submission = SubmissionModel(
                 id=submission_id,

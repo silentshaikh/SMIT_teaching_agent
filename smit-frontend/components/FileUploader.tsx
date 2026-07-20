@@ -3,8 +3,9 @@
 import { useState, useCallback, type ChangeEvent, type DragEvent, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { submitFile, fetchAssignments, fetchRubrics, getHistory } from "@/lib/api";
+import { submitFile, submitViaUrl, fetchAssignments, fetchRubrics, getHistory } from "@/lib/api";
 import { useSubmissionStore } from "@/store/submission";
+import { CyberToggle } from "@/components/CyberToggle";
 import type { SubmissionResponse, Rubric, HistoryItem } from "@/lib/types";
 
 const ALLOWED_EXTENSIONS = [".js", ".py", ".html"];
@@ -16,6 +17,8 @@ const LANG_COLORS: Record<string, string> = {
   html: "bg-orange-400",
 };
 
+type SubmitMode = "file" | "url";
+
 export function FileUploader() {
   const router = useRouter();
   const setSubmissionId = useSubmissionStore((s) => s.setSubmissionId);
@@ -26,8 +29,10 @@ export function FileUploader() {
   const storeSetAssignmentName = useSubmissionStore((s) => s.setAssignmentName);
   const storeSetRubricId = useSubmissionStore((s) => s.setRubricId);
 
+  const [mode, setMode] = useState<SubmitMode>("file");
   const [file, setFile] = useState<File | null>(null);
   const [fileContent, setFileContent] = useState("");
+  const [url, setUrl] = useState("");
   const [studentId, setStudentId] = useState("");
   const [selectedAssignmentId, setSelectedAssignmentId] = useState("");
   const [rubricId, setRubricId] = useState("");
@@ -103,24 +108,56 @@ export function FileUploader() {
     [processFile]
   );
 
+  const handleUrlChange = (val: string) => {
+    setUrl(val);
+    setError(null);
+    // Auto-detect language from URL
+    const lower = val.toLowerCase();
+    if (lower.endsWith(".py") || lower.includes("python")) {
+      setLanguage("python");
+      setPreviewLang("python");
+    } else if (lower.endsWith(".js") || lower.includes("javascript")) {
+      setLanguage("javascript");
+      setPreviewLang("javascript");
+    } else if (lower.endsWith(".html") || lower.includes("html")) {
+      setLanguage("html");
+      setPreviewLang("html");
+    }
+  };
+
   const mutation = useMutation({
-    mutationFn: () =>
-      submitFile(
+    mutationFn: () => {
+      if (mode === "url") {
+        return submitViaUrl(
+          url,
+          selectedAssignment?.name ?? "",
+          rubricId || "default",
+          selectedAssignmentId || undefined
+        );
+      }
+      return submitFile(
         file!,
-        studentId,
         selectedAssignment?.name ?? "",
         rubricId || "default",
         selectedAssignmentId || undefined
-      ),
+      );
+    },
   });
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
     setError(null);
 
-    if (!file || !studentId || !selectedAssignmentId) {
-      setError("! MISSING REQUIRED FIELDS");
-      return;
+    if (mode === "url") {
+      if (!url || !studentId || !selectedAssignmentId) {
+        setError("! MISSING REQUIRED FIELDS");
+        return;
+      }
+    } else {
+      if (!file || !studentId || !selectedAssignmentId) {
+        setError("! MISSING REQUIRED FIELDS");
+        return;
+      }
     }
     setShowConfirm(true);
   };
@@ -149,51 +186,89 @@ export function FileUploader() {
       <form onSubmit={handleSubmit} className="space-y-5">
         {error && (
           <div className="border border-cyber-crimson bg-cyber-crimson/10 p-4 flex items-center gap-3">
-            <span className="text-cyber-crimson font-michroma text-sm">&gt;&gt;</span>
+            <span className="text-cyber-crimson font-syncopate text-sm">&gt;&gt;</span>
             <span className="font-syncopate text-[10px] tracking-widest text-cyber-crimson uppercase flex-1">
               {error}
             </span>
           </div>
         )}
 
-        {/* File upload */}
+        {/* Mode toggle */}
         <div>
-          <label className="block mb-2">Code File *</label>
-          <div
-            onDragOver={(e) => { e.preventDefault(); setIsDragOver(true); }}
-            onDragLeave={() => setIsDragOver(false)}
-            onDrop={handleDrop}
-            className={`relative border-2 border-dashed transition-all duration-200 cursor-pointer hover:border-cyber-green hover:scale-[1.01] ${
-              isDragOver
-                ? "border-cyber-green bg-cyber-green/5 border-solid"
-                : "border-white/10"
-            }`}
-            style={{ height: "clamp(120px, 15vw, 180px)" }}
-          >
-            <input
-              type="file"
-              accept=".js,.py,.html"
-              onChange={handleFileChange}
-              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-            />
-            <div className="flex flex-col items-center justify-center h-full gap-2 p-4 text-center">
-              <svg className="w-8 h-8 text-cyber-green" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M12 16.5V9.75m0 0l3 3m-3-3l-3 3M6.75 19.5a4.5 4.5 0 01-1.41-8.775 5.25 5.25 0 0110.233-2.33 3 3 0 013.758 3.848A3.752 3.752 0 0118 19.5H6.75z" />
-              </svg>
-              <p className="font-body text-sm text-white/60">
-                {file ? file.name : "Drag & drop or click to upload"}
-              </p>
-              {file && (
-                <p className="font-space-mono text-[10px] text-cyber-green/50">
-                  {(file.size / 1024).toFixed(1)}KB
-                </p>
-              )}
-            </div>
-          </div>
+          <label className="block mb-2">Submission Method *</label>
+          <CyberToggle
+            options={[
+              { value: "file", label: "Upload File", color: "green" },
+              { value: "url", label: "Paste URL", color: "cyan" },
+            ]}
+            value={mode}
+            onChange={(v) => {
+              setMode(v as SubmitMode);
+              setError(null);
+              if (v === "url") { setFile(null); setFileContent(""); }
+            }}
+            fullWidth
+          />
         </div>
 
-        {/* Code preview */}
-        {fileContent && (
+        {/* File upload mode */}
+        {mode === "file" && (
+          <div>
+            <label className="block mb-2">Code File *</label>
+            <div
+              onDragOver={(e) => { e.preventDefault(); setIsDragOver(true); }}
+              onDragLeave={() => setIsDragOver(false)}
+              onDrop={handleDrop}
+              className={`relative border-2 border-dashed transition-all duration-200 cursor-pointer hover:border-cyber-green hover:scale-[1.01] ${
+                isDragOver
+                  ? "border-cyber-green bg-cyber-green/5 border-solid"
+                  : "border-white/10"
+              }`}
+              style={{ height: "clamp(120px, 15vw, 180px)" }}
+            >
+              <input
+                type="file"
+                accept=".js,.py,.html"
+                onChange={handleFileChange}
+                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+              />
+              <div className="flex flex-col items-center justify-center h-full gap-2 p-4 text-center">
+                <svg className="w-8 h-8 text-cyber-green" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 16.5V9.75m0 0l3 3m-3-3l-3 3M6.75 19.5a4.5 4.5 0 01-1.41-8.775 5.25 5.25 0 0110.233-2.33 3 3 0 013.758 3.848A3.752 3.752 0 0118 19.5H6.75z" />
+                </svg>
+                <p className="font-body text-sm text-white/60">
+                  {file ? file.name : "Drag & drop or click to upload"}
+                </p>
+                {file && (
+                  <p className="font-space-mono text-[10px] text-cyber-green/50">
+                    {(file.size / 1024).toFixed(1)}KB
+                  </p>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* URL input mode */}
+        {mode === "url" && (
+          <div>
+            <label className="block mb-2">Code URL *</label>
+            <input
+              type="url"
+              value={url}
+              onChange={(e) => handleUrlChange(e.target.value)}
+              className="cyber-input"
+              placeholder="> https://github.com/user/repo/blob/main/app.py"
+              required
+            />
+            <p className="font-space-mono text-[10px] text-cyber-green/40 mt-1">
+              // Supports GitHub raw/blob URLs, Pastebin, or any direct .js/.py/.html link
+            </p>
+          </div>
+        )}
+
+        {/* Code preview (file mode only) */}
+        {mode === "file" && fileContent && (
           <div>
             <div className="flex items-center justify-between mb-2">
               <label className="block">Code Preview</label>
@@ -213,7 +288,7 @@ export function FileUploader() {
             value={studentId}
             onChange={(e) => setStudentId(e.target.value)}
             className="cyber-input"
-            placeholder="> SMIT-101"
+            placeholder="> SYNAPSE-101"
             required
           />
         </div>
@@ -283,7 +358,7 @@ export function FileUploader() {
 
         <button
           type="submit"
-          disabled={mutation.isPending || !file}
+          disabled={mutation.isPending || (mode === "file" && !file) || (mode === "url" && !url)}
           data-magnetic="true"
           className="cyber-btn w-full disabled:opacity-30 disabled:cursor-none"
           style={{ height: 52 }}
@@ -332,13 +407,26 @@ export function FileUploader() {
             <h3 className="font-heading text-lg text-cyber-green">Confirm Submission</h3>
             <div className="space-y-2 text-sm">
               <div className="flex justify-between">
-                <span className="text-white/50">File</span>
-                <span className="text-white/80">{file?.name}</span>
+                <span className="text-white/50">Method</span>
+                <span className="text-white/80 uppercase">{mode}</span>
               </div>
-              <div className="flex justify-between">
-                <span className="text-white/50">Size</span>
-                <span className="text-white/80">{file ? (file.size / 1024).toFixed(1) : 0}KB</span>
-              </div>
+              {mode === "file" ? (
+                <>
+                  <div className="flex justify-between">
+                    <span className="text-white/50">File</span>
+                    <span className="text-white/80">{file?.name}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-white/50">Size</span>
+                    <span className="text-white/80">{file ? (file.size / 1024).toFixed(1) : 0}KB</span>
+                  </div>
+                </>
+              ) : (
+                <div className="flex justify-between">
+                  <span className="text-white/50">URL</span>
+                  <span className="text-white/80 truncate max-w-[200px]">{url}</span>
+                </div>
+              )}
               <div className="flex justify-between">
                 <span className="text-white/50">Assignment</span>
                 <span className="text-white/80">{selectedAssignment?.name}</span>

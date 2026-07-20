@@ -1,6 +1,4 @@
-import asyncio
-
-from agents import Agent, Runner, function_tool, AgentOutputSchema
+from agents import Agent, function_tool, AgentOutputSchema
 from agents.config import get_model, PRIMARY_MODEL
 
 from models.schemas import RubricScore
@@ -59,13 +57,6 @@ def _grade_to_letter(score_text: str) -> str:
 
 calculate_score = function_tool(_calculate_score)
 grade_to_letter = function_tool(_grade_to_letter)
-
-
-async def run_rubric(input_data, rubric_id):
-    result = Runner.run(rubric_agent, input=input_data, max_turns=20)
-    if asyncio.iscoroutine(result):
-        result = await result
-    return result.final_output
 
 
 rubric_agent = Agent[None](

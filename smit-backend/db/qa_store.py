@@ -1,25 +1,50 @@
-"""In-memory store for report Q&A pairs. Ephemeral — resets on server restart."""
+"""Persistent Q&A store backed by SQLite via SQLAlchemy."""
 
-from collections import defaultdict
 from datetime import datetime, timezone
+
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from models.db_models import QAModel
+from db.session import AsyncSessionLocal
 
 
 class QAStore:
-    def __init__(self):
-        self._store: dict[str, list[dict]] = defaultdict(list)
-
-    def add(self, submission_id: str, question: str, answer_en: str, answer_urdu: str) -> dict:
+    async def add(self, submission_id: str, question: str, answer_en: str, answer_urdu: str) -> dict:
         pair = {
             "question": question,
             "answer_en": answer_en,
             "answer_urdu": answer_urdu,
             "created_at": datetime.now(timezone.utc).isoformat(),
         }
-        self._store[submission_id].append(pair)
+        async with AsyncSessionLocal() as session:
+            db_qa = QAModel(
+                submission_id=submission_id,
+                question=question,
+                answer_en=answer_en,
+                answer_urdu=answer_urdu,
+            )
+            session.add(db_qa)
+            await session.commit()
         return pair
 
-    def get(self, submission_id: str) -> list[dict]:
-        return list(self._store[submission_id])
+    async def get(self, submission_id: str) -> list[dict]:
+        async with AsyncSessionLocal() as session:
+            result = await session.execute(
+                select(QAModel)
+                .where(QAModel.submission_id == submission_id)
+                .order_by(QAModel.created_at.asc())
+            )
+            rows = result.scalars().all()
+            return [
+                {
+                    "question": row.question,
+                    "answer_en": row.answer_en,
+                    "answer_urdu": row.answer_urdu,
+                    "created_at": row.created_at.isoformat(),
+                }
+                for row in rows
+            ]
 
 
 qa_store = QAStore()

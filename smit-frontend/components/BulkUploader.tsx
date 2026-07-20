@@ -50,7 +50,7 @@ export function BulkUploader() {
     <div className="space-y-4">
       {error && (
         <div className="border border-cyber-crimson bg-cyber-crimson/10 p-4 flex items-center gap-3">
-          <span className="text-cyber-crimson font-michroma text-sm">&gt;&gt;</span>
+          <span className="text-cyber-crimson font-syncopate text-sm">&gt;&gt;</span>
           <span className="font-syncopate text-[10px] tracking-widest text-cyber-crimson uppercase flex-1">
             {error}
           </span>
@@ -95,7 +95,7 @@ export function BulkUploader() {
 
       {result && (
         <div className="border border-cyber-green/20 p-4 space-y-2">
-          <div className="flex items-center gap-4 font-michroma text-[10px] tracking-widest uppercase">
+          <div className="flex items-center gap-4 font-syncopate text-[10px] tracking-widest uppercase">
             <span className="text-cyber-green">Total: {result.total}</span>
             <span className="text-cyber-green">Submitted: {result.submitted}</span>
             <span className="text-cyber-crimson">Failed: {result.failed}</span>

@@ -15,6 +15,7 @@ const navLinks = [
   { href: "/history", label: "History" },
   { href: "/progress", label: "Progress" },
   { href: "/dashboard", label: "Dashboard" },
+  { href: "/submissions", label: "Submissions" },
   { href: "/rubrics", label: "Rubrics" },
 ];
 
@@ -86,14 +87,14 @@ export function Navbar() {
   return (
     <header
       ref={navRef}
-      className="fixed top-0 left-0 right-0 z-50 bg-black/8 backdrop-blur-md border-b border-white/10"
+      className="fixed top-0 left-0 right-0 z-50 bg-[var(--cyber-bg)]/80 backdrop-blur-md border-b border-[var(--color-card-border)]"
     >
       {/* Desktop */}
       <div className="hidden lg:flex items-center justify-between h-16 max-w-7xl mx-auto px-[var(--space-page-x)]">
         <Link href="/" className="flex items-center gap-3">
           <span className="w-4 h-4 rounded-full bg-[#DFFFFD]" />
-          <span className="font-heading font-bold text-xl text-[var(--color-text-primary)]">
-            SMIT AI
+          <span className="title-orbitron font-bold text-xl synapse-gradient">
+            SYNAPSE
           </span>
         </Link>
 
@@ -116,8 +117,8 @@ export function Navbar() {
       <div className="flex lg:hidden items-center justify-between h-14 px-4">
         <Link href="/" className="flex items-center gap-3">
           <span className="w-4 h-4 rounded-full bg-[#DFFFFD]" />
-          <span className="font-heading font-bold text-lg text-[var(--color-text-primary)]">
-            SMIT AI
+          <span className="title-orbitron font-bold text-lg synapse-gradient">
+            SYNAPSE
           </span>
         </Link>
 
@@ -138,7 +139,7 @@ export function Navbar() {
       {isOpen && (
         <div
           ref={menuRef}
-          className="lg:hidden overflow-hidden border-t border-white/10"
+          className="lg:hidden overflow-hidden border-t border-[var(--color-card-border)]"
           style={{
             height: 0,
             opacity: 0,
@@ -152,7 +153,7 @@ export function Navbar() {
                 key={l.href}
                 href={l.href}
                 onClick={closeMenu}
-                className="h-12 flex items-center px-6 text-base font-medium text-[var(--color-text-primary)] hover:bg-white/5 border-b border-white/5 transition-colors"
+                className="h-12 flex items-center px-6 text-base font-medium text-[var(--color-text-primary)] hover:bg-[var(--color-card-bg)] border-b border-[var(--color-card-border)]/30 transition-colors"
               >
                 {l.label}
               </Link>

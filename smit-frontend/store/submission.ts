@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { persist } from "zustand/middleware";
 import type { AssignmentReport } from "@/lib/types";
 
 export type SubmissionStatus = "idle" | "processing" | "complete" | "error";
@@ -44,17 +45,37 @@ const initialState = {
   userId: null,
 };
 
-export const useSubmissionStore = create<SubmissionState>((set) => ({
-  ...initialState,
-  setSubmissionId: (submissionId) => set({ submissionId }),
-  setStatus: (status) => set({ status }),
-  setReport: (report) => set({ report }),
-  setError: (error) => set({ error }),
-  setOriginalCode: (originalCode) => set({ originalCode }),
-  setLanguage: (language) => set({ language }),
-  setStudentId: (studentId) => set({ studentId }),
-  setAssignmentName: (assignmentName) => set({ assignmentName }),
-  setRubricId: (rubricId) => set({ rubricId }),
-  setAuth: (token, role, userId) => set({ token, role, userId }),
-  reset: () => set(initialState),
-}));
+export const useSubmissionStore = create<SubmissionState>()(
+  persist(
+    (set) => ({
+      ...initialState,
+      setSubmissionId: (submissionId) => set({ submissionId }),
+      setStatus: (status) => set({ status }),
+      setReport: (report) => set({ report }),
+      setError: (error) => set({ error }),
+      setOriginalCode: (originalCode) => set({ originalCode }),
+      setLanguage: (language) => set({ language }),
+      setStudentId: (studentId) => set({ studentId }),
+      setAssignmentName: (assignmentName) => set({ assignmentName }),
+      setRubricId: (rubricId) => set({ rubricId }),
+      setAuth: (token, role, userId) => set({ token, role, userId }),
+      reset: () => set(initialState),
+    }),
+    {
+      name: "smit-submission",
+      partialize: (state) => ({
+        token: state.token,
+        role: state.role,
+        userId: state.userId,
+        studentId: state.studentId,
+        assignmentName: state.assignmentName,
+        rubricId: state.rubricId,
+        submissionId: state.submissionId,
+        report: state.report,
+        status: state.status,
+        originalCode: state.originalCode,
+        language: state.language,
+      }),
+    }
+  )
+);

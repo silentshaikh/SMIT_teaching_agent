@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime, timezone
 
-from sqlalchemy import String, Integer, DateTime, Text, ForeignKey, JSON, UniqueConstraint
+from sqlalchemy import String, Integer, DateTime, Text, ForeignKey, JSON, UniqueConstraint, Index
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
 
@@ -66,6 +66,10 @@ class AssignmentModel(Base):
 
 class SubmissionModel(Base):
     __tablename__ = "submissions"
+    __table_args__ = (
+        Index("ix_submissions_student_id", "student_id"),
+        Index("ix_submissions_assignment_id", "assignment_id"),
+    )
 
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
     student_id: Mapped[str] = mapped_column(String(36), ForeignKey("students.id"))
@@ -76,6 +80,9 @@ class SubmissionModel(Base):
     source_code: Mapped[str] = mapped_column(Text, default="")
     code_hash: Mapped[str] = mapped_column(String(64))
     status: Mapped[str] = mapped_column(String(32), default="pending")
+    approval_status: Mapped[str] = mapped_column(String(16), default="pending")  # pending / approved / rejected
+    reviewed_by: Mapped[str | None] = mapped_column(String(36), nullable=True)
+    reviewed_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc))
 
     student = relationship("StudentModel", back_populates="submissions")
@@ -87,6 +94,9 @@ class SubmissionModel(Base):
 
 class ReportModel(Base):
     __tablename__ = "reports"
+    __table_args__ = (
+        Index("ix_reports_submission_id", "submission_id"),
+    )
 
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
     submission_id: Mapped[str] = mapped_column(String(36), ForeignKey("submissions.id"), unique=True)
@@ -133,3 +143,16 @@ class RubricVersionModel(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc))
 
     rubric = relationship("RubricModel", back_populates="versions")
+
+
+# ── Q&A model (persisted) ──────────────────────────
+
+class QAModel(Base):
+    __tablename__ = "qa_pairs"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    submission_id: Mapped[str] = mapped_column(String(36), ForeignKey("submissions.id"), index=True)
+    question: Mapped[str] = mapped_column(Text)
+    answer_en: Mapped[str] = mapped_column(Text)
+    answer_urdu: Mapped[str] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc))

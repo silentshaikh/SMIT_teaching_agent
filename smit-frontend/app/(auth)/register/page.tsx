@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import gsap from "gsap";
 import { useSubmissionStore } from "@/store/submission";
 import { setAuthToken } from "@/lib/api";
+import { CyberToggle } from "@/components/CyberToggle";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -64,16 +65,18 @@ export default function RegisterPage() {
   };
 
   return (
-    <main className="min-h-screen bg-cyber-black flex items-center justify-center px-[var(--space-page-x)]">
-      <div ref={containerRef} className="w-full max-w-md space-y-6">
-        <div className="cyber-panel p-8">
-          <div className="flex items-center gap-3 mb-2">
+    <main className="min-h-screen bg-cyber-black flex items-center justify-center px-[var(--space-page-x)] pt-16 pb-8">
+      <div ref={containerRef} className="w-full max-w-md space-y-4">
+        {/* Header */}
+        <div className="text-center py-6">
+          <div className="flex items-center justify-center gap-3 mb-3">
             <span className="inline-block w-2 h-2 bg-cyber-purple animate-pulse-neon" />
             <span className="font-syncopate text-[10px] tracking-[0.3em] text-cyber-purple/50 uppercase">
               Node // Auth
             </span>
+            <span className="inline-block w-2 h-2 bg-cyber-purple animate-pulse-neon" />
           </div>
-          <h1 className="font-heading font-bold text-2xl uppercase tracking-[0.08em] bg-gradient-to-r from-cyber-purple via-cyber-green to-cyber-purple bg-[length:200%_auto] animate-gradient-shift bg-clip-text text-transparent">
+          <h1 className="font-heading font-bold text-3xl uppercase tracking-[0.08em] bg-gradient-to-r from-cyber-purple via-cyber-green to-cyber-purple bg-[length:200%_auto] animate-gradient-shift bg-clip-text text-transparent">
             Create Account
           </h1>
           <p className="font-syncopate text-[10px] text-cyber-purple/40 mt-2 tracking-[0.3em] uppercase">
@@ -81,10 +84,11 @@ export default function RegisterPage() {
           </p>
         </div>
 
+        {/* Form card */}
         <form onSubmit={handleSubmit} className="cyber-panel p-8 space-y-5">
           {error && (
             <div className="border border-cyber-crimson bg-cyber-crimson/10 p-4 flex items-center gap-3">
-              <span className="text-cyber-crimson font-michroma text-sm">&gt;&gt;</span>
+              <span className="text-cyber-crimson font-syncopate text-sm">&gt;&gt;</span>
               <span className="font-syncopate text-[10px] tracking-widest text-cyber-crimson uppercase flex-1">
                 {error}
               </span>
@@ -130,22 +134,15 @@ export default function RegisterPage() {
 
           <div>
             <label className="block mb-2">Role *</label>
-            <div className="flex gap-3">
-              {(["student", "teacher"] as const).map((r) => (
-                <button
-                  key={r}
-                  type="button"
-                  onClick={() => setRole(r)}
-                  className={`flex-1 py-3 border font-syncopate text-[10px] tracking-widest uppercase transition-colors ${
-                    role === r
-                      ? "border-cyber-purple bg-cyber-purple/20 text-cyber-purple"
-                      : "border-cyber-purple/20 text-cyber-purple/40 hover:border-cyber-purple/50"
-                  }`}
-                >
-                  &gt;&gt; {r}
-                </button>
-              ))}
-            </div>
+            <CyberToggle
+              options={[
+                { value: "student", label: "Student", color: "green" },
+                { value: "teacher", label: "Teacher", color: "purple" },
+              ]}
+              value={role}
+              onChange={(v) => setRole(v as "student" | "teacher")}
+              fullWidth
+            />
           </div>
 
           {role === "student" && (

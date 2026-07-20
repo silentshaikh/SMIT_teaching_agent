@@ -3,7 +3,7 @@ import '@testing-library/jest-dom'
 
 jest.mock('next/navigation', () => ({
   useParams: () => ({}),
-  useSearchParams: () => new URLSearchParams('batch=SMIT-Batch-42'),
+  useSearchParams: () => new URLSearchParams('batch=SYNAPSE-Batch-42'),
   useRouter: () => ({ push: jest.fn() }),
 }))
 
@@ -54,7 +54,7 @@ test('TC-056: shows loading state while fetching dashboard data', () => {
 test('TC-057: shows empty state when total_students is 0', () => {
   mockQueryIsLoading = false
   mockDashboardData = {
-    batch: 'SMIT-Batch-42',
+    batch: 'SYNAPSE-Batch-42',
     total_students: 0,
     total_submissions: 0,
     average_score: 0,
@@ -70,7 +70,7 @@ test('TC-057: shows empty state when total_students is 0', () => {
 test('TC-058: shows stat grid when data is populated', () => {
   mockQueryIsLoading = false
   mockDashboardData = {
-    batch: 'SMIT-Batch-42',
+    batch: 'SYNAPSE-Batch-42',
     total_students: 5,
     total_submissions: 10,
     average_score: 78,
@@ -88,7 +88,7 @@ test('TC-058: shows stat grid when data is populated', () => {
 test('TC-059: shows grade distribution when data is populated', () => {
   mockQueryIsLoading = false
   mockDashboardData = {
-    batch: 'SMIT-Batch-42',
+    batch: 'SYNAPSE-Batch-42',
     total_students: 5,
     total_submissions: 10,
     average_score: 78,
@@ -106,7 +106,7 @@ test('TC-059: shows grade distribution when data is populated', () => {
 test('TC-060: does not show loading after data resolves', () => {
   mockQueryIsLoading = false
   mockDashboardData = {
-    batch: 'SMIT-Batch-42',
+    batch: 'SYNAPSE-Batch-42',
     total_students: 5,
     total_submissions: 10,
     average_score: 78,

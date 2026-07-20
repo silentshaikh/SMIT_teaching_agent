@@ -37,6 +37,16 @@ client.interceptors.request.use((config) => {
   return config;
 });
 
+client.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401 && typeof window !== "undefined") {
+      window.location.href = "/login";
+    }
+    return Promise.reject(error);
+  }
+);
+
 export async function login(
   email: string,
   password: string
@@ -50,14 +60,12 @@ export async function login(
 
 export async function submitFile(
   file: File,
-  studentId: string,
   assignmentName: string,
   rubricId: string,
   assignmentId?: string
 ): Promise<SubmissionResponse> {
   const form = new FormData();
   form.append("file", file);
-  form.append("student_id", studentId);
   form.append("assignment_name", assignmentName);
   form.append("rubric_id", rubricId);
   if (assignmentId) {
@@ -216,6 +224,83 @@ export async function bulkSubmit(
   const { data } = await client.post<BulkSubmitResult>(
     "/api/v1/submit/bulk",
     form
+  );
+  return data;
+}
+
+// ── Submission approval API ──────────────────────────
+
+export interface SubmissionListItem {
+  id: string;
+  student_id: string;
+  student_name: string | null;
+  assignment_name: string;
+  language: string;
+  file_name: string;
+  status: string;
+  approval_status: string;
+  reviewed_by: string | null;
+  reviewed_at: string | null;
+  score: number | null;
+  grade: string | null;
+  created_at: string;
+}
+
+export async function fetchSubmissions(
+  batch?: string,
+  approvalStatus?: string
+): Promise<SubmissionListItem[]> {
+  const params: Record<string, string> = {};
+  if (batch) params.batch = batch;
+  if (approvalStatus) params.approval_status = approvalStatus;
+  const { data } = await client.get<SubmissionListItem[]>(
+    "/api/v1/submissions",
+    { params }
+  );
+  return data;
+}
+
+export async function approveSubmission(
+  submissionId: string,
+  action: "approved" | "rejected",
+  note?: string
+): Promise<{ submission_id: string; approval_status: string }> {
+  const { data } = await client.patch<{
+    submission_id: string;
+    approval_status: string;
+  }>(`/api/v1/submissions/${submissionId}/approve`, {
+    action,
+    note,
+  });
+  return data;
+}
+
+// ── URL submission API ──────────────────────────────
+
+export async function submitViaUrl(
+  url: string,
+  assignmentName: string,
+  rubricId: string,
+  assignmentId?: string
+): Promise<SubmissionResponse> {
+  const { data } = await client.post<SubmissionResponse>("/api/v1/submit/url", {
+    url,
+    assignment_name: assignmentName,
+    rubric_id: rubricId,
+    assignment_id: assignmentId,
+  });
+  return data;
+}
+
+// ── Update submission API ────────────────────────────
+
+export async function updateSubmission(
+  submissionId: string,
+  opts: { code?: string; url?: string; rubric_id?: string }
+): Promise<SubmissionResponse> {
+  const { data } = await client.patch<SubmissionResponse>(
+    `/api/v1/submissions/${submissionId}`,
+    opts
   );
   return data;
 }

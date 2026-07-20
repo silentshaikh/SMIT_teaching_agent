@@ -5,6 +5,7 @@ import gsap from "gsap";
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import { getHistory, getBadges } from "@/lib/api";
+import { useSubmissionStore } from "@/store/submission";
 import type { HistoryItem, Badge } from "@/lib/types";
 
 interface GroupedHistory {
@@ -16,9 +17,8 @@ export default function HistoryPage() {
   const headerRef = useRef<HTMLDivElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
 
-  const studentId = typeof window !== "undefined"
-    ? new URLSearchParams(window.location.search).get("student_id") || "student-1"
-    : "student-1";
+  const userId = useSubmissionStore((s) => s.userId);
+  const studentId = userId || "student-1";
 
   const { data, isLoading } = useQuery({
     queryKey: ["history", studentId],
@@ -90,7 +90,7 @@ export default function HistoryPage() {
                 <span
                   key={b.id}
                   title={b.description}
-                  className="border border-cyber-green/30 bg-cyber-green/5 px-3 py-1 font-michroma text-[10px] tracking-widest text-cyber-green/80 uppercase cursor-help"
+                  className="border border-cyber-green/30 bg-cyber-green/5 px-3 py-1 font-syncopate text-[10px] tracking-widest text-cyber-green/80 uppercase cursor-help"
                 >
                   {b.name}
                 </span>
@@ -101,7 +101,7 @@ export default function HistoryPage() {
 
         {isLoading && (
           <div className="cyber-panel p-6 text-center">
-            <span className="font-michroma text-xs tracking-widest text-cyber-green/50 animate-pulse-neon uppercase">
+            <span className="font-syncopate text-xs tracking-widest text-cyber-green/50 animate-pulse-neon uppercase">
               Loading Transmission Logs...
             </span>
           </div>

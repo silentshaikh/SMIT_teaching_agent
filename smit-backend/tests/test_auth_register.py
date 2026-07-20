@@ -29,11 +29,37 @@ def test_register_teacher_success(client):
         "email": f"reg-teacher-{_uid}@test.com",
         "password": "pass456",
         "role": "teacher",
+        "invite_code": "test-invite-code",
     })
     assert r.status_code == 200
     data = r.json()
     assert data["role"] == "teacher"
     assert data["name"] == "New Teacher"
+
+
+def test_register_teacher_wrong_invite_code_rejected(client):
+    """TC-REG-008: Teacher with wrong invite code is rejected."""
+    _uid = uuid4().hex[:8]
+    r = client.post("/api/v1/auth/register", json={
+        "name": "Bad Invite Teacher",
+        "email": f"badinvite-{_uid}@test.com",
+        "password": "pass456",
+        "role": "teacher",
+        "invite_code": "wrong-code",
+    })
+    assert r.status_code == 403
+
+
+def test_register_teacher_no_invite_code_rejected(client):
+    """TC-REG-009: Teacher without invite code is rejected."""
+    _uid = uuid4().hex[:8]
+    r = client.post("/api/v1/auth/register", json={
+        "name": "No Invite Teacher",
+        "email": f"noinvite-{_uid}@test.com",
+        "password": "pass456",
+        "role": "teacher",
+    })
+    assert r.status_code == 403
 
 
 def test_register_duplicate_email_rejected(client):
@@ -44,6 +70,7 @@ def test_register_duplicate_email_rejected(client):
         "email": f"dupe-{_uid}@test.com",
         "password": "pass123",
         "role": "teacher",
+        "invite_code": "test-invite-code",
     }
     r1 = client.post("/api/v1/auth/register", json=payload)
     assert r1.status_code == 200
@@ -122,5 +149,6 @@ def test_register_cross_table_duplicate(client):
         "email": email,
         "password": "pass456",
         "role": "teacher",
+        "invite_code": "test-invite-code",
     })
     assert r.status_code == 409

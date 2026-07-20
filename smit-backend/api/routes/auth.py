@@ -77,6 +77,10 @@ async def register(body: RegisterRequest, session: AsyncSession = Depends(get_se
     if body.role == "student" and not body.batch:
         raise HTTPException(422, "Batch is required for students")
 
+    if body.role == "teacher":
+        if not body.invite_code or body.invite_code != settings.teacher_invite_code:
+            raise HTTPException(403, "Valid invite code required for teacher registration")
+
     existing = await session.execute(
         select(StudentModel).where(StudentModel.email == body.email)
     )

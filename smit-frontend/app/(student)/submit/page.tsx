@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import gsap from "gsap";
 import { FileUploader } from "@/components/FileUploader";
 import { BulkUploader } from "@/components/BulkUploader";
+import { CyberToggle } from "@/components/CyberToggle";
 
 export default function SubmitPage() {
   const headerRef = useRef<HTMLDivElement>(null);
@@ -56,24 +57,15 @@ export default function SubmitPage() {
         </div>
 
         {/* Mode toggle */}
-        <div className="flex gap-2">
-          <button
-            onClick={() => setMode("single")}
-            className={`cyber-btn text-[10px] px-4 py-2 h-auto ${
-              mode === "single" ? "" : "opacity-40"
-            }`}
-          >
-            Single Upload
-          </button>
-          <button
-            onClick={() => setMode("bulk")}
-            className={`cyber-btn text-[10px] px-4 py-2 h-auto ${
-              mode === "bulk" ? "" : "opacity-40"
-            }`}
-          >
-            Bulk Upload (Teacher)
-          </button>
-        </div>
+        <CyberToggle
+          options={[
+            { value: "single", label: "Single Upload", color: "green" },
+            { value: "bulk", label: "Bulk Upload (Teacher)", color: "purple" },
+          ]}
+          value={mode}
+          onChange={(v) => setMode(v as "single" | "bulk")}
+          fullWidth
+        />
 
         <div className="grid md:grid-cols-5 gap-6">
           <div ref={formRef} className="md:col-span-3 cyber-panel p-6 lg:p-8 animate-on-scroll">

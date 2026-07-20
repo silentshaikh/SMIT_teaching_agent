@@ -4,6 +4,9 @@ import { useEffect, useRef, useCallback } from "react";
 import * as THREE from "three";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { EffectComposer } from "three/examples/jsm/postprocessing/EffectComposer.js";
+import { RenderPass } from "three/examples/jsm/postprocessing/RenderPass.js";
+import { UnrealBloomPass } from "three/examples/jsm/postprocessing/UnrealBloomPass.js";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -13,7 +16,7 @@ interface ParticleMesh extends THREE.Mesh {
   userData: { speed: number; phase: number };
 }
 
-const SCREEN_MODES = ["terminal", "code", "status", "matrix"] as const;
+const SCREEN_MODES = ["terminal", "code", "status", "matrix", "analysis"] as const;
 type ScreenMode = typeof SCREEN_MODES[number];
 
 const TERMINAL_LINES = [
@@ -56,7 +59,7 @@ const CODE_LINES = [
 
 const STATUS_LINES = [
   "╔══════════════════════════════╗",
-  "║     SMIT AI SYSTEM STATUS    ║",
+  "║    SYNAPSE SYSTEM STATUS     ║",
   "╠══════════════════════════════╣",
   "║ Agent 1: Code Review  [OK]  ║",
   "║ Agent 2: Tutor        [OK]  ║",
@@ -68,6 +71,33 @@ const STATUS_LINES = [
   "║ Active Jobs:  3             ║",
   "║ Queue:        0             ║",
   "╚══════════════════════════════╝",
+];
+
+const ANALYSIS_LINES = [
+  ">> SYNAPSE CODE ANALYSIS ENGINE",
+  "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+  "",
+  "▶ Scanning submission.py...",
+  "  [████████████████████░░░░] 78%",
+  "",
+  "✓ Syntax check:      PASS",
+  "✓ Import validation: PASS",
+  "✗ Logic analysis:    3 issues",
+  "✓ Style compliance:  PASS",
+  "",
+  "📊 Score: 85/100  Grade: B+",
+  "",
+  "🔍 Mistakes detected:",
+  "   L12: Off-by-one error [LOGIC]",
+  "   L8:  Variable 'x' unclear [NAME]",
+  "   L1:  Missing docstring [STYLE]",
+  "",
+  "💡 Generating corrections...",
+  "   >> Tutor agent: Explaining...",
+  "   >> Feedback agent: Ready",
+  "",
+  "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+  "ANALYSIS COMPLETE // 2.4s",
 ];
 
 function createScreenCanvas(): HTMLCanvasElement {
@@ -102,6 +132,49 @@ function drawScreenContent(canvas: HTMLCanvasElement, mode: ScreenMode, time: nu
           const ch = chars[Math.floor((time * 3 + c + r) * 7) % chars.length];
           ctx.fillText(ch, x, yy);
         }
+      }
+    }
+    return;
+  }
+
+  if (mode === "analysis") {
+    const lines = ANALYSIS_LINES;
+    ctx.font = "12px monospace";
+    const lineHeight = 14;
+    const startY = 12;
+    const maxVisible = Math.floor((h - 24) / lineHeight);
+    const visibleLines = lines.slice(0, maxVisible);
+
+    for (let i = 0; i < visibleLines.length; i++) {
+      const line = visibleLines[i];
+      const y = startY + i * lineHeight;
+      const drawLen = Math.min(line.length, Math.floor(charIndex - i * 2));
+      if (drawLen <= 0) continue;
+
+      const drawn = line.substring(0, drawLen);
+
+      if (line.startsWith("✓")) ctx.fillStyle = "#00FF66";
+      else if (line.startsWith("✗")) ctx.fillStyle = "#FF6B6B";
+      else if (line.startsWith("▶")) ctx.fillStyle = "#FFB347";
+      else if (line.startsWith("📊")) ctx.fillStyle = "#00f0ff";
+      else if (line.startsWith("🔍")) ctx.fillStyle = "#7c3aed";
+      else if (line.startsWith("💡")) ctx.fillStyle = "#FFB347";
+      else if (line.startsWith("   L")) ctx.fillStyle = "#FF6B6B";
+      else if (line.startsWith("   >>")) ctx.fillStyle = "#00A693";
+      else if (line.startsWith("━")) ctx.fillStyle = "#00A693";
+      else if (line.includes("[")) ctx.fillStyle = "#48CAE4";
+      else ctx.fillStyle = "#00A693";
+
+      ctx.fillText(drawn, 10, y);
+    }
+
+    if (Math.floor(time * 2) % 2 === 0) {
+      const lastVisibleIdx = Math.min(visibleLines.length - 1, Math.floor(charIndex / 2));
+      if (lastVisibleIdx >= 0) {
+        const lastLine = visibleLines[lastVisibleIdx] || "";
+        const cursorX = 10 + ctx.measureText(lastLine.substring(0, Math.min(lastLine.length, Math.floor(charIndex - lastVisibleIdx * 2)))).width;
+        ctx.fillStyle = "#00A693";
+        ctx.fillRect(cursorX, startY + lastVisibleIdx * lineHeight - 10, 7, 12);
       }
     }
     return;
@@ -175,6 +248,19 @@ export default function HeroScene() {
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
     renderer.toneMappingExposure = 1.2;
     container.appendChild(renderer.domElement);
+
+    // ── Post-processing (Bloom/Glow) ──
+    const composer = new EffectComposer(renderer);
+    const renderPass = new RenderPass(scene, camera);
+    composer.addPass(renderPass);
+
+    const bloomPass = new UnrealBloomPass(
+      new THREE.Vector2(width, height),
+      0.8,   // strength
+      0.4,   // radius
+      0.85   // threshold
+    );
+    composer.addPass(bloomPass);
 
     // ── Tech Universe Background ──
 
@@ -653,6 +739,317 @@ export default function HeroScene() {
     penMesh.castShadow = true;
     deskGroup.add(penMesh);
 
+    // ── Office Chair ──
+    const chairGroup = new THREE.Group();
+    chairGroup.name = "chairGroup";
+    chairGroup.position.set(0, -0.95, 2.2);
+    scene.add(chairGroup);
+
+    // Chair base (5-star)
+    const chairBaseMat = new THREE.MeshStandardMaterial({ color: 0x222233, roughness: 0.3, metalness: 0.8 });
+    const chairBaseCenter = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.10, 0.04, 24), chairBaseMat);
+    chairBaseCenter.position.y = 0.02;
+    chairGroup.add(chairBaseCenter);
+
+    // Chair legs (5-star pattern)
+    for (let i = 0; i < 5; i++) {
+      const angle = (i / 5) * Math.PI * 2;
+      const legLen = 0.35;
+      const leg = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.02, 0.02, legLen, 8),
+        chairBaseMat
+      );
+      leg.rotation.z = Math.PI / 2;
+      leg.rotation.y = angle;
+      leg.position.set(Math.cos(angle) * legLen * 0.5, 0.02, Math.sin(angle) * legLen * 0.5);
+      chairGroup.add(leg);
+
+      // Caster wheel
+      const wheel = new THREE.Mesh(
+        new THREE.SphereGeometry(0.03, 12, 12),
+        new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.6, metalness: 0.3 })
+      );
+      wheel.position.set(Math.cos(angle) * legLen, 0.01, Math.sin(angle) * legLen);
+      chairGroup.add(wheel);
+    }
+
+    // Chair stem
+    const chairStem = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.03, 0.04, 0.45, 12),
+      chairBaseMat
+    );
+    chairStem.position.y = 0.25;
+    chairGroup.add(chairStem);
+
+    // Chair seat
+    const chairSeatMat = new THREE.MeshStandardMaterial({ color: 0x1A1A2E, roughness: 0.7, metalness: 0.1 });
+    const chairSeat = new THREE.Mesh(
+      new THREE.BoxGeometry(0.50, 0.06, 0.50),
+      chairSeatMat
+    );
+    chairSeat.position.y = 0.50;
+    chairSeat.castShadow = true;
+    chairGroup.add(chairSeat);
+
+    // Seat cushion
+    const chairCushion = new THREE.Mesh(
+      new THREE.BoxGeometry(0.46, 0.04, 0.46),
+      new THREE.MeshStandardMaterial({ color: 0x2A2A4A, roughness: 0.9 })
+    );
+    chairCushion.position.y = 0.55;
+    chairGroup.add(chairCushion);
+
+    // Chair backrest
+    const chairBack = new THREE.Mesh(
+      new THREE.BoxGeometry(0.48, 0.55, 0.06),
+      chairSeatMat
+    );
+    chairBack.position.set(0, 0.85, -0.22);
+    chairBack.rotation.x = -0.1;
+    chairBack.castShadow = true;
+    chairGroup.add(chairBack);
+
+    // Backrest cushion
+    const chairBackCushion = new THREE.Mesh(
+      new THREE.BoxGeometry(0.44, 0.50, 0.04),
+      new THREE.MeshStandardMaterial({ color: 0x2A2A4A, roughness: 0.9 })
+    );
+    chairBackCushion.position.set(0, 0.85, -0.19);
+    chairBackCushion.rotation.x = -0.1;
+    chairGroup.add(chairBackCushion);
+
+    // Headrest
+    const chairHeadrest = new THREE.Mesh(
+      new THREE.BoxGeometry(0.25, 0.15, 0.05),
+      chairSeatMat
+    );
+    chairHeadrest.position.set(0, 1.20, -0.24);
+    chairGroup.add(chairHeadrest);
+
+    // Armrests
+    const armrestMat = new THREE.MeshStandardMaterial({ color: 0x333344, roughness: 0.4, metalness: 0.5 });
+    for (const side of [-1, 1]) {
+      // Armrest support
+      const armSupport = new THREE.Mesh(
+        new THREE.BoxGeometry(0.03, 0.25, 0.03),
+        armrestMat
+      );
+      armSupport.position.set(side * 0.25, 0.62, -0.05);
+      chairGroup.add(armSupport);
+
+      // Armrest pad
+      const armPad = new THREE.Mesh(
+        new THREE.BoxGeometry(0.06, 0.03, 0.22),
+        new THREE.MeshStandardMaterial({ color: 0x2A2A4A, roughness: 0.8 })
+      );
+      armPad.position.set(side * 0.25, 0.75, 0.02);
+      chairGroup.add(armPad);
+    }
+
+    // ── Robot Character ──
+    const robotGroup = new THREE.Group();
+    robotGroup.name = "robotGroup";
+    robotGroup.position.set(0, 0.55, 2.2);
+    robotGroup.rotation.y = Math.PI;
+    scene.add(robotGroup);
+
+    const robotBodyMat = new THREE.MeshStandardMaterial({ color: 0x3A3A5A, roughness: 0.3, metalness: 0.7 });
+    const robotAccentMat = new THREE.MeshStandardMaterial({ color: 0x00FF66, emissive: 0x00FF66, emissiveIntensity: 0.6, roughness: 0.2, metalness: 0.5 });
+    const robotDarkMat = new THREE.MeshStandardMaterial({ color: 0x1A1A2E, roughness: 0.5, metalness: 0.3 });
+
+    // Robot torso
+    const robotTorso = new THREE.Mesh(
+      new THREE.BoxGeometry(0.35, 0.40, 0.25),
+      robotBodyMat
+    );
+    robotTorso.position.y = 0.20;
+    robotTorso.castShadow = true;
+    robotGroup.add(robotTorso);
+
+    // Torso accent stripe
+    const robotStripe = new THREE.Mesh(
+      new THREE.BoxGeometry(0.36, 0.04, 0.26),
+      robotAccentMat
+    );
+    robotStripe.position.y = 0.25;
+    robotGroup.add(robotStripe);
+
+    // Chest indicator
+    const robotChestLed = new THREE.Mesh(
+      new THREE.SphereGeometry(0.03, 12, 12),
+      robotAccentMat
+    );
+    robotChestLed.position.set(0, 0.30, 0.13);
+    robotGroup.add(robotChestLed);
+
+    // Robot head
+    const robotHead = new THREE.Mesh(
+      new THREE.BoxGeometry(0.28, 0.25, 0.24),
+      robotBodyMat
+    );
+    robotHead.position.y = 0.52;
+    robotHead.castShadow = true;
+    robotGroup.add(robotHead);
+
+    // Visor (eye area)
+    const robotVisor = new THREE.Mesh(
+      new THREE.BoxGeometry(0.24, 0.08, 0.02),
+      new THREE.MeshStandardMaterial({ color: 0x111122, roughness: 0.1, metalness: 0.9 })
+    );
+    robotVisor.position.set(0, 0.54, 0.13);
+    robotGroup.add(robotVisor);
+
+    // Eyes (glowing)
+    const robotEyeL = new THREE.Mesh(
+      new THREE.SphereGeometry(0.025, 12, 12),
+      new THREE.MeshStandardMaterial({ color: 0x00FF66, emissive: 0x00FF66, emissiveIntensity: 1.5, roughness: 0, metalness: 0 })
+    );
+    robotEyeL.position.set(-0.06, 0.54, 0.14);
+    robotGroup.add(robotEyeL);
+
+    const robotEyeR = new THREE.Mesh(
+      new THREE.SphereGeometry(0.025, 12, 12),
+      new THREE.MeshStandardMaterial({ color: 0x00FF66, emissive: 0x00FF66, emissiveIntensity: 1.5, roughness: 0, metalness: 0 })
+    );
+    robotEyeR.position.set(0.06, 0.54, 0.14);
+    robotGroup.add(robotEyeR);
+
+    // Antenna
+    const robotAntenna = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.008, 0.008, 0.12, 8),
+      robotAccentMat
+    );
+    robotAntenna.position.set(0, 0.71, 0);
+    robotGroup.add(robotAntenna);
+
+    const robotAntennaTip = new THREE.Mesh(
+      new THREE.SphereGeometry(0.015, 8, 8),
+      robotAccentMat
+    );
+    robotAntennaTip.position.set(0, 0.78, 0);
+    robotGroup.add(robotAntennaTip);
+
+    // Neck
+    const robotNeck = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.06, 0.08, 0.08, 12),
+      robotDarkMat
+    );
+    robotNeck.position.y = 0.38;
+    robotGroup.add(robotNeck);
+
+    // Arms
+    const robotArmL = new THREE.Group();
+    robotArmL.position.set(-0.22, 0.32, 0);
+    robotGroup.add(robotArmL);
+
+    const robotUpperArmL = new THREE.Mesh(
+      new THREE.BoxGeometry(0.08, 0.22, 0.08),
+      robotBodyMat
+    );
+    robotUpperArmL.position.y = -0.11;
+    robotArmL.add(robotUpperArmL);
+
+    const robotForearmL = new THREE.Group();
+    robotForearmL.position.set(0, -0.22, 0);
+    robotArmL.add(robotForearmL);
+
+    const robotForearmMeshL = new THREE.Mesh(
+      new THREE.BoxGeometry(0.07, 0.18, 0.07),
+      robotBodyMat
+    );
+    robotForearmMeshL.position.y = -0.09;
+    robotForearmL.add(robotForearmMeshL);
+
+    // Hand
+    const robotHandL = new THREE.Mesh(
+      new THREE.SphereGeometry(0.04, 10, 10),
+      robotAccentMat
+    );
+    robotHandL.position.set(0, -0.20, 0);
+    robotForearmL.add(robotHandL);
+
+    const robotArmR = new THREE.Group();
+    robotArmR.position.set(0.22, 0.32, 0);
+    robotGroup.add(robotArmR);
+
+    const robotUpperArmR = new THREE.Mesh(
+      new THREE.BoxGeometry(0.08, 0.22, 0.08),
+      robotBodyMat
+    );
+    robotUpperArmR.position.y = -0.11;
+    robotArmR.add(robotUpperArmR);
+
+    const robotForearmR = new THREE.Group();
+    robotForearmR.position.set(0, -0.22, 0);
+    robotArmR.add(robotForearmR);
+
+    const robotForearmMeshR = new THREE.Mesh(
+      new THREE.BoxGeometry(0.07, 0.18, 0.07),
+      robotBodyMat
+    );
+    robotForearmMeshR.position.y = -0.09;
+    robotForearmR.add(robotForearmMeshR);
+
+    const robotHandR = new THREE.Mesh(
+      new THREE.SphereGeometry(0.04, 10, 10),
+      robotAccentMat
+    );
+    robotHandR.position.set(0, -0.20, 0);
+    robotForearmR.add(robotHandR);
+
+    // Legs (sitting position)
+    const robotLegL = new THREE.Group();
+    robotLegL.position.set(-0.10, -0.05, 0.05);
+    robotGroup.add(robotLegL);
+
+    const robotThighL = new THREE.Mesh(
+      new THREE.BoxGeometry(0.10, 0.20, 0.10),
+      robotBodyMat
+    );
+    robotThighL.position.set(0, -0.10, 0.08);
+    robotThighL.rotation.x = -Math.PI / 2 + 0.3;
+    robotLegL.add(robotThighL);
+
+    const robotShinL = new THREE.Mesh(
+      new THREE.BoxGeometry(0.08, 0.18, 0.08),
+      robotBodyMat
+    );
+    robotShinL.position.set(0, -0.18, 0.22);
+    robotLegL.add(robotShinL);
+
+    const robotFootL = new THREE.Mesh(
+      new THREE.BoxGeometry(0.10, 0.04, 0.14),
+      robotAccentMat
+    );
+    robotFootL.position.set(0, -0.28, 0.26);
+    robotLegL.add(robotFootL);
+
+    const robotLegR = new THREE.Group();
+    robotLegR.position.set(0.10, -0.05, 0.05);
+    robotGroup.add(robotLegR);
+
+    const robotThighR = new THREE.Mesh(
+      new THREE.BoxGeometry(0.10, 0.20, 0.10),
+      robotBodyMat
+    );
+    robotThighR.position.set(0, -0.10, 0.08);
+    robotThighR.rotation.x = -Math.PI / 2 + 0.3;
+    robotLegR.add(robotThighR);
+
+    const robotShinR = new THREE.Mesh(
+      new THREE.BoxGeometry(0.08, 0.18, 0.08),
+      robotBodyMat
+    );
+    robotShinR.position.set(0, -0.18, 0.22);
+    robotLegR.add(robotShinR);
+
+    const robotFootR = new THREE.Mesh(
+      new THREE.BoxGeometry(0.10, 0.04, 0.14),
+      robotAccentMat
+    );
+    robotFootR.position.set(0, -0.28, 0.26);
+    robotLegR.add(robotFootR);
+
     // ── Floating Particles (teal dust) ──
     const particleCount = width < 640 ? 40 : 120;
     const particles: ParticleMesh[] = [];
@@ -667,6 +1064,110 @@ export default function HeroScene() {
       particles.push(p);
     }
 
+    // ── Holographic AI Agent Orbs ──
+    const agentColors = [
+      { color: 0x00FF66, name: "Code Review" },
+      { color: 0x00f0ff, name: "Tutor" },
+      { color: 0x7c3aed, name: "Rubric" },
+      { color: 0xFFB347, name: "Feedback" },
+    ];
+
+    interface AgentOrb {
+      mesh: THREE.Mesh;
+      ring: THREE.Mesh;
+      line: THREE.Line;
+      basePos: THREE.Vector3;
+      phase: number;
+    }
+
+    const agentOrbs: AgentOrb[] = [];
+    const agentOrbGroup = new THREE.Group();
+    agentOrbGroup.name = "agentOrbs";
+    scene.add(agentOrbGroup);
+
+    for (let i = 0; i < 4; i++) {
+      const angle = (i / 4) * Math.PI * 2 + Math.PI / 4;
+      const radius = 1.8;
+      const basePos = new THREE.Vector3(
+        Math.cos(angle) * radius,
+        2.2 + Math.sin(angle * 2) * 0.3,
+        Math.sin(angle) * radius - 0.5
+      );
+
+      // Core orb
+      const orbMat = new THREE.MeshStandardMaterial({
+        color: agentColors[i].color,
+        emissive: agentColors[i].color,
+        emissiveIntensity: 0.8,
+        transparent: true,
+        opacity: 0.9,
+        roughness: 0,
+        metalness: 0.3,
+      });
+      const orb = new THREE.Mesh(new THREE.SphereGeometry(0.12, 16, 16), orbMat);
+      orb.position.copy(basePos);
+      orb.userData = { phase: i * Math.PI * 0.5, agentIndex: i };
+      agentOrbGroup.add(orb);
+
+      // Orb ring
+      const ringMat = new THREE.MeshBasicMaterial({
+        color: agentColors[i].color,
+        transparent: true,
+        opacity: 0.3,
+        side: THREE.DoubleSide,
+      });
+      const ring = new THREE.Mesh(new THREE.RingGeometry(0.18, 0.22, 24), ringMat);
+      ring.position.copy(basePos);
+      ring.rotation.x = Math.PI / 2;
+      agentOrbGroup.add(ring);
+
+      // Connection line to screen
+      const lineMat = new THREE.LineBasicMaterial({
+        color: agentColors[i].color,
+        transparent: true,
+        opacity: 0.15,
+      });
+      const lineGeo = new THREE.BufferGeometry().setFromPoints([basePos, new THREE.Vector3(0, 1.36, 0.04)]);
+      const line = new THREE.Line(lineGeo, lineMat);
+      agentOrbGroup.add(line);
+
+      agentOrbs.push({ mesh: orb, ring, line, basePos, phase: i * Math.PI * 0.5 });
+    }
+
+    // ── Data Stream Particles (flowing from screen) ──
+    const dataStreamCount = 60;
+    const dataStreams: ParticleMesh[] = [];
+    const dataStreamGeo = new THREE.BoxGeometry(0.02, 0.02, 0.08);
+
+    for (let i = 0; i < dataStreamCount; i++) {
+      const hue = Math.random() > 0.5 ? 0x00FF66 : 0x00f0ff;
+      const mat = new THREE.MeshBasicMaterial({
+        color: hue,
+        transparent: true,
+        opacity: 0.7,
+      });
+      const p = new THREE.Mesh(dataStreamGeo, mat) as unknown as ParticleMesh;
+
+      // Start from screen area
+      const startX = (Math.random() - 0.5) * 1.8;
+      const startY = 0.8 + Math.random() * 1.1;
+      p.position.set(startX, startY, 0.05);
+
+      p.userData = {
+        speed: 0.01 + Math.random() * 0.02,
+        phase: Math.random() * Math.PI * 2,
+        startX,
+        startY,
+        direction: new THREE.Vector3(
+          (Math.random() - 0.5) * 0.5,
+          0.3 + Math.random() * 0.5,
+          0.5 + Math.random() * 0.5
+        ).normalize(),
+      };
+      scene.add(p);
+      dataStreams.push(p);
+    }
+
     // ── Responsive ──
     function applyResponsive(w: number) {
       if (w < 640) {
@@ -675,18 +1176,27 @@ export default function HeroScene() {
         cpuGroup.visible = false;
         speakerGroupL.visible = false;
         speakerGroupR.visible = false;
+        chairGroup.visible = false;
+        robotGroup.visible = false;
+        agentOrbGroup.visible = false;
       } else if (w < 1024) {
         camera.position.set(0, 2.5, 8.5);
         camera.fov = 50;
         cpuGroup.visible = true;
         speakerGroupL.visible = false;
         speakerGroupR.visible = false;
+        chairGroup.visible = true;
+        robotGroup.visible = true;
+        agentOrbGroup.visible = true;
       } else {
         camera.position.set(0, 2.8, 7.5);
         camera.fov = 45;
         cpuGroup.visible = true;
         speakerGroupL.visible = true;
         speakerGroupR.visible = true;
+        chairGroup.visible = true;
+        robotGroup.visible = true;
+        agentOrbGroup.visible = true;
       }
       camera.updateProjectionMatrix();
     }
@@ -701,6 +1211,8 @@ export default function HeroScene() {
       camera.updateProjectionMatrix();
       renderer.setSize(w, h);
       renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      composer.setSize(w, h);
+      bloomPass.resolution.set(w, h);
       applyResponsive(w);
     };
     window.addEventListener("resize", handleResize);
@@ -931,6 +1443,113 @@ export default function HeroScene() {
       if (slRing) (slRing.material as THREE.MeshBasicMaterial).opacity = 0.15 + 0.1 * Math.sin(t * 4.3);
       if (srRing) (srRing.material as THREE.MeshBasicMaterial).opacity = 0.15 + 0.1 * Math.sin(t * 4.3 + 1.1);
 
+      // ── Robot Idle Animation ──
+      // Breathing (torso scale)
+      const breathScale = 1 + 0.015 * Math.sin(t * 1.8);
+      robotTorso.scale.y = breathScale;
+      robotStripe.scale.y = breathScale;
+
+      // Head subtle movement
+      robotHead.rotation.y = Math.sin(t * 0.4) * 0.08;
+      robotHead.rotation.z = Math.sin(t * 0.3) * 0.03;
+
+      // Eye blink (every ~4 seconds)
+      const blinkCycle = t % 4;
+      const isBlinking = blinkCycle > 3.8 && blinkCycle < 3.95;
+      const eyeScaleY = isBlinking ? 0.1 : 1;
+      robotEyeL.scale.y = eyeScaleY;
+      robotEyeR.scale.y = eyeScaleY;
+
+      // Eye glow pulse
+      const eyeGlow = 1.0 + 0.5 * Math.sin(t * 1.5);
+      (robotEyeL.material as THREE.MeshStandardMaterial).emissiveIntensity = eyeGlow;
+      (robotEyeR.material as THREE.MeshStandardMaterial).emissiveIntensity = eyeGlow;
+
+      // Antenna tip pulse
+      (robotAntennaTip.material as THREE.MeshStandardMaterial).emissiveIntensity = 0.5 + 0.5 * Math.sin(t * 3);
+
+      // Chest LED pulse
+      (robotChestLed.material as THREE.MeshStandardMaterial).emissiveIntensity = 0.4 + 0.4 * Math.sin(t * 2);
+
+      // Arm typing animation (when screen is on)
+      if (screenOnRef.current) {
+        // Left arm subtle movement
+        robotArmL.rotation.x = Math.sin(t * 2.5) * 0.05;
+        robotArmL.rotation.z = -0.15 + Math.sin(t * 1.8) * 0.03;
+        robotForearmL.rotation.x = Math.sin(t * 3.2) * 0.08;
+
+        // Right arm typing
+        robotArmR.rotation.x = Math.sin(t * 3.5 + 0.5) * 0.06;
+        robotArmR.rotation.z = 0.15 + Math.sin(t * 2.2) * 0.03;
+        robotForearmR.rotation.x = Math.sin(t * 4.0 + 1.0) * 0.12;
+      } else {
+        // Resting pose
+        robotArmL.rotation.x = 0;
+        robotArmL.rotation.z = -0.15;
+        robotForearmL.rotation.x = 0;
+        robotArmR.rotation.x = 0;
+        robotArmR.rotation.z = 0.15;
+        robotForearmR.rotation.x = 0;
+      }
+
+      // ── Holographic AI Agent Orbs Animation ──
+      for (const agent of agentOrbs) {
+        const orb = agent.mesh;
+        const ring = agent.ring;
+        const line = agent.line;
+
+        // Float around in a gentle orbit
+        const orbitSpeed = 0.3;
+        const floatY = Math.sin(t * orbitSpeed + agent.phase) * 0.15;
+        const floatX = Math.cos(t * orbitSpeed * 0.7 + agent.phase) * 0.1;
+        orb.position.x = agent.basePos.x + floatX;
+        orb.position.y = agent.basePos.y + floatY;
+        orb.position.z = agent.basePos.z + Math.sin(t * 0.5 + agent.phase) * 0.08;
+
+        // Pulse glow
+        const orbMat = orb.material as THREE.MeshStandardMaterial;
+        orbMat.emissiveIntensity = 0.5 + 0.4 * Math.sin(t * 2 + agent.phase);
+
+        // Rotate ring
+        ring.position.copy(orb.position);
+        ring.rotation.x = Math.PI / 2 + Math.sin(t + agent.phase) * 0.3;
+        ring.rotation.z = t * 0.5 + agent.phase;
+        const ringMat = ring.material as THREE.MeshBasicMaterial;
+        ringMat.opacity = 0.2 + 0.15 * Math.sin(t * 1.5 + agent.phase);
+
+        // Update connection line
+        const linePositions = line.geometry.attributes.position as THREE.BufferAttribute;
+        linePositions.setXYZ(0, orb.position.x, orb.position.y, orb.position.z);
+        linePositions.needsUpdate = true;
+        const lineMat = line.material as THREE.LineBasicMaterial;
+        lineMat.opacity = 0.08 + 0.07 * Math.sin(t * 2 + agent.phase);
+      }
+
+      // ── Data Stream Particles Animation ──
+      for (const ds of dataStreams) {
+        const dir = ds.userData.direction as THREE.Vector3;
+        ds.position.x += dir.x * ds.userData.speed;
+        ds.position.y += dir.y * ds.userData.speed;
+        ds.position.z += dir.z * ds.userData.speed;
+
+        // Reset when too far
+        if (ds.position.z > 4 || ds.position.y > 4) {
+          ds.position.set(
+            ds.userData.startX,
+            ds.userData.startY,
+            0.05
+          );
+        }
+
+        // Fade based on distance from screen
+        const dist = ds.position.z - 0.05;
+        const dsMat = ds.material as THREE.MeshBasicMaterial;
+        dsMat.opacity = Math.max(0, 0.7 - dist * 0.2);
+
+        // Rotate data packet
+        ds.rotation.z += 0.02;
+      }
+
       // Camera auto-rotate + parallax
       const autoRotateSpeed = 0.06;
       camera.position.x = Math.sin(t * autoRotateSpeed) * 7.5 * 0.25 + mouseCurrentRef.current.x * 0.6;
@@ -942,7 +1561,7 @@ export default function HeroScene() {
 
       camera.lookAt(0, 0.5, 0);
 
-      renderer.render(scene, camera);
+      composer.render();
     };
 
     animate();
@@ -957,6 +1576,15 @@ export default function HeroScene() {
     introTl.from(cpuGroup.position, { x: cpuGroup.position.x + 3, duration: 0.9, ease: "power3.out" }, "-=0.6");
     introTl.from([speakerGroupL.scale, speakerGroupR.scale], { x: 0, y: 0, z: 0, duration: 0.5, ease: "back.out(2.0)", stagger: 0.15 }, "-=0.4");
     introTl.from([mugGroup.scale, plantGroup.scale, notepadMesh.scale], { x: 0, y: 0, z: 0, duration: 0.5, ease: "back.out(1.8)", stagger: 0.10 }, "-=0.3");
+
+    // Agent orbs intro - appear with scale animation
+    for (const agent of agentOrbs) {
+      agent.mesh.scale.set(0, 0, 0);
+      agent.ring.scale.set(0, 0, 0);
+      introTl.to(agent.mesh.scale, { x: 1, y: 1, z: 1, duration: 0.4, ease: "back.out(2.0)" }, "-=0.15");
+      introTl.to(agent.ring.scale, { x: 1, y: 1, z: 1, duration: 0.3, ease: "power2.out" }, "-=0.25");
+    }
+
     introTl.to(screenMat, { emissiveIntensity: 0.6, duration: 0.6, ease: "power2.in" }, "-=0.5");
 
     animFrameIdRef.current = animFrameId;
@@ -972,6 +1600,12 @@ export default function HeroScene() {
       gsapCtx.revert();
 
       for (const p of particles) (p.material as THREE.Material).dispose();
+      for (const ds of dataStreams) (ds.material as THREE.Material).dispose();
+      for (const agent of agentOrbs) {
+        (agent.mesh.material as THREE.Material).dispose();
+        (agent.ring.material as THREE.Material).dispose();
+        (agent.line.material as THREE.Material).dispose();
+      }
       for (const s of steamParticles) (s.material as THREE.Material).dispose();
 
       scene.traverse((obj) => {

@@ -85,5 +85,6 @@ test('TC-LOGIN-07: renders student and teacher role buttons', () => {
 test('TC-LOGIN-08: student is selected by default', () => {
   render(<LoginPage />)
   const studentBtn = screen.getByRole('button', { name: /student/i })
-  expect(studentBtn.className).toContain('bg-cyber-green/20')
+  expect(studentBtn.className).toContain('border-cyber-green')
+  expect(studentBtn.className).toContain('text-cyber-green')
 })

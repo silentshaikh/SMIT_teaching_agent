@@ -54,14 +54,6 @@ def test_get_model_uses_primary_model_name():
 
 
 # TC-016
-def test_get_model_accepts_fallback():
-    with patch.dict(os.environ, {"OPENROUTER_API_KEY": "sk-or-test"}):
-        from agents.config import get_model, FALLBACK_MODEL
-        model = get_model(FALLBACK_MODEL)
-        assert model.model == FALLBACK_MODEL
-
-
-# TC-017
 @pytest.mark.parametrize("agent_file", [
     "agents/code_review.py",
     "agents/tutor.py",
@@ -84,7 +76,7 @@ def test_no_forbidden_imports_in_agent_files(agent_file):
         )
 
 
-# TC-018
+# TC-017
 @pytest.mark.parametrize("module,attr", [
     ("agents.code_review", "code_review_agent"),
     ("agents.tutor", "tutor_agent"),

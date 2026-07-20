@@ -66,7 +66,7 @@ test('TC-020: renders file input', () => {
 
 test('TC-021: renders student ID input', () => {
   render(<FileUploader />)
-  expect(screen.getByPlaceholderText(/> SMIT-101/)).toBeInTheDocument()
+  expect(screen.getByPlaceholderText(/> SYNAPSE-101/)).toBeInTheDocument()
 })
 
 test('TC-022: renders assignment dropdown', () => {

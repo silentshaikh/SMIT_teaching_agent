@@ -16,6 +16,9 @@ from models.schemas import (
     BatchAnalytics, BatchMistakeStat,
     OverrideRequest,
     BulkSubmitResult,
+    SubmissionListItem,
+    ApprovalRequest,
+    ApprovalResponse,
 )
 from models.db_models import (
     SubmissionModel, ReportModel, StudentModel,
@@ -326,4 +329,86 @@ async def export_batch_report_pdf(
         content=bytes(pdf_bytes),
         media_type="application/pdf",
         headers={"Content-Disposition": f"attachment; filename=batch-{batch}-report.pdf"},
+    )
+
+
+# ── 4.1 List all submissions (teacher view) ─────────
+
+@router.get("/submissions", response_model=list[SubmissionListItem])
+async def list_submissions(
+    batch: str | None = None,
+    approval_status: str | None = None,
+    session: AsyncSession = Depends(get_session),
+    teacher: dict = Depends(verify_token),
+):
+    if teacher.get("role") != "teacher":
+        raise HTTPException(403, "Only teachers can list all submissions")
+
+    q = (
+        select(SubmissionModel, ReportModel, StudentModel)
+        .outerjoin(ReportModel, SubmissionModel.id == ReportModel.submission_id)
+        .outerjoin(StudentModel, SubmissionModel.student_id == StudentModel.id)
+    )
+
+    if batch:
+        q = q.where(StudentModel.batch == batch)
+
+    if approval_status:
+        q = q.where(SubmissionModel.approval_status == approval_status)
+
+    result = await session.execute(q.order_by(SubmissionModel.created_at.desc()))
+    rows = result.all()
+
+    items = []
+    for sub, rep, student in rows:
+        items.append(SubmissionListItem(
+            id=sub.id,
+            student_id=sub.student_id,
+            student_name=student.name if student else None,
+            assignment_name=sub.file_name,
+            language=sub.language,
+            file_name=sub.file_name,
+            status=sub.status,
+            approval_status=sub.approval_status,
+            reviewed_by=sub.reviewed_by,
+            reviewed_at=sub.reviewed_at,
+            score=rep.score if rep else None,
+            grade=rep.grade if rep else None,
+            created_at=sub.created_at,
+        ))
+
+    return items
+
+
+# ── 4.2 Approve / reject a submission ────────────────
+
+@router.patch("/submissions/{submission_id}/approve", response_model=ApprovalResponse)
+async def approve_submission(
+    submission_id: str,
+    body: ApprovalRequest,
+    session: AsyncSession = Depends(get_session),
+    teacher: dict = Depends(verify_token),
+):
+    if teacher.get("role") != "teacher":
+        raise HTTPException(403, "Only teachers can approve/reject submissions")
+
+    result = await session.execute(
+        select(SubmissionModel).where(SubmissionModel.id == submission_id)
+    )
+    sub = result.scalar_one_or_none()
+    if sub is None:
+        raise HTTPException(404, "Submission not found")
+
+    sub.approval_status = body.action
+    sub.reviewed_by = teacher.get("sub", "unknown")
+    sub.reviewed_at = datetime.now(timezone.utc)
+
+    await session.commit()
+    await session.refresh(sub)
+
+    return ApprovalResponse(
+        submission_id=sub.id,
+        approval_status=sub.approval_status,
+        reviewed_by=sub.reviewed_by,
+        reviewed_at=sub.reviewed_at,
     )

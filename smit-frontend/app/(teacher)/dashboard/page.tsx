@@ -13,8 +13,8 @@ export default function DashboardPage() {
   const insightsRef = useRef<HTMLDivElement>(null);
 
   const batch = typeof window !== "undefined"
-    ? new URLSearchParams(window.location.search).get("batch") || "SMIT-Batch-42"
-    : "SMIT-Batch-42";
+    ? new URLSearchParams(window.location.search).get("batch") || "SYNAPSE-Batch-42"
+    : "SYNAPSE-Batch-42";
 
   const { data, isLoading } = useQuery({
     queryKey: ["dashboard", batch],
@@ -95,7 +95,7 @@ export default function DashboardPage() {
 
         {isLoading && (
           <div className="cyber-panel p-6 text-center">
-            <span className="font-michroma text-xs tracking-widest text-cyber-green/50 animate-pulse-neon uppercase">
+            <span className="font-syncopate text-xs tracking-widest text-cyber-green/50 animate-pulse-neon uppercase">
               &gt;&gt; Compiling Batch Telemetry...
             </span>
           </div>

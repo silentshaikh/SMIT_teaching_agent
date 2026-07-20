@@ -38,8 +38,16 @@ async def get_report_from_store(submission_id: str, session: AsyncSession) -> di
 async def get_report(
     submission_id: str,
     session: AsyncSession = Depends(get_session),
-    _: dict = Depends(verify_token),
+    user: dict = Depends(verify_token),
 ):
+    if user.get("role") == "student":
+        result = await session.execute(
+            select(SubmissionModel).where(SubmissionModel.id == submission_id)
+        )
+        sub = result.scalar_one_or_none()
+        if sub is None or sub.student_id != user.get("sub"):
+            raise HTTPException(404, "Submission not found")
+
     data = await get_report_from_store(submission_id, session)
     if data is None:
         raise HTTPException(404, "Submission not found")
@@ -85,8 +93,16 @@ async def get_history(
 async def download_report(
     submission_id: str,
     session: AsyncSession = Depends(get_session),
-    _: dict = Depends(verify_token),
+    user: dict = Depends(verify_token),
 ):
+    if user.get("role") == "student":
+        result = await session.execute(
+            select(SubmissionModel).where(SubmissionModel.id == submission_id)
+        )
+        sub = result.scalar_one_or_none()
+        if sub is None or sub.student_id != user.get("sub"):
+            raise HTTPException(404, "Submission not found")
+
     result = await session.execute(
         select(ReportModel).where(ReportModel.submission_id == submission_id)
     )

@@ -123,7 +123,7 @@ async def ask_question(
         logger.exception("Tutor agent failed for Q&A")
         raise HTTPException(502, "Tutor agent unavailable")
 
-    pair = qa_store.add(
+    pair = await qa_store.add(
         submission_id,
         body.question,
         tutor_output.explanation_en,
@@ -138,7 +138,7 @@ async def get_qa_history(
     submission_id: str,
     _: dict = Depends(verify_token),
 ):
-    pairs = qa_store.get(submission_id)
+    pairs = await qa_store.get(submission_id)
     return [QAResponse(**p) for p in pairs]
 
 

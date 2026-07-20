@@ -3,6 +3,16 @@ from unittest.mock import patch, AsyncMock
 from uuid import uuid4
 
 
+def _teacher_token():
+    from api.routes.auth import create_token
+    return create_token("teacher-001", "teacher", "teacher@test.com")
+
+
+def _student_token(sid: str = "test-student-001"):
+    from api.routes.auth import create_token
+    return create_token(sid, "student", f"{sid}@test.com")
+
+
 # TC-035
 def test_health_endpoint_returns_200(client):
     r = client.get("/api/v1/health")
@@ -19,11 +29,13 @@ def test_health_endpoint_returns_ok_status(client):
 
 # TC-037
 @patch("api.routes.submit.process_submission")
-def test_submit_valid_js_returns_202(mock_orch, client, sample_js_code, valid_submission_data):
+def test_submit_valid_js_returns_202(mock_orch, client, sample_js_code):
     mock_orch.return_value = AsyncMock()
+    token = _student_token()
     r = client.post(
         "/api/v1/submit",
-        data=valid_submission_data,
+        headers={"Authorization": f"Bearer {token}"},
+        data={"assignment_name": "Week 1 JS", "rubric_id": "rubric_js_w1"},
         files={"file": ("app.js", sample_js_code, "text/javascript")}
     )
     assert r.status_code in [200, 202]
@@ -31,11 +43,13 @@ def test_submit_valid_js_returns_202(mock_orch, client, sample_js_code, valid_su
 
 # TC-038
 @patch("api.routes.submit.process_submission")
-def test_submit_returns_submission_id(mock_orch, client, sample_js_code, valid_submission_data):
+def test_submit_returns_submission_id(mock_orch, client, sample_js_code):
     mock_orch.return_value = AsyncMock()
+    token = _student_token()
     r = client.post(
         "/api/v1/submit",
-        data=valid_submission_data,
+        headers={"Authorization": f"Bearer {token}"},
+        data={"assignment_name": "Week 1 JS", "rubric_id": "rubric_js_w1"},
         files={"file": ("app.js", sample_js_code, "text/javascript")}
     )
     assert "submission_id" in r.json()
@@ -43,11 +57,13 @@ def test_submit_returns_submission_id(mock_orch, client, sample_js_code, valid_s
 
 # TC-039
 @patch("api.routes.submit.process_submission")
-def test_submit_returns_poll_url(mock_orch, client, sample_js_code, valid_submission_data):
+def test_submit_returns_poll_url(mock_orch, client, sample_js_code):
     mock_orch.return_value = AsyncMock()
+    token = _student_token()
     r = client.post(
         "/api/v1/submit",
-        data=valid_submission_data,
+        headers={"Authorization": f"Bearer {token}"},
+        data={"assignment_name": "Week 1 JS", "rubric_id": "rubric_js_w1"},
         files={"file": ("app.js", sample_js_code, "text/javascript")}
     )
     data = r.json()
@@ -55,10 +71,12 @@ def test_submit_returns_poll_url(mock_orch, client, sample_js_code, valid_submis
 
 
 # TC-040
-def test_submit_rejects_exe_file(client, valid_submission_data):
+def test_submit_rejects_exe_file(client):
+    token = _student_token()
     r = client.post(
         "/api/v1/submit",
-        data=valid_submission_data,
+        headers={"Authorization": f"Bearer {token}"},
+        data={"assignment_name": "Week 1", "rubric_id": "r1"},
         files={"file": ("hack.exe", b"MZ\x90\x00", "application/octet-stream")}
     )
     assert r.status_code in [400, 413, 422]
@@ -66,24 +84,28 @@ def test_submit_rejects_exe_file(client, valid_submission_data):
 
 
 # TC-041
-def test_submit_rejects_oversized_file(client, valid_submission_data):
+def test_submit_rejects_oversized_file(client):
     big = b"x" * 60_000
+    token = _student_token()
     r = client.post(
         "/api/v1/submit",
-        data=valid_submission_data,
+        headers={"Authorization": f"Bearer {token}"},
+        data={"assignment_name": "Week 1", "rubric_id": "r1"},
         files={"file": ("big.js", big, "text/javascript")}
     )
     assert r.status_code in [400, 413, 422]
 
 
 # TC-042
-def test_submit_missing_student_id_returns_422(client, sample_js_code):
+def test_submit_rejects_teacher(client):
+    token = _teacher_token()
     r = client.post(
         "/api/v1/submit",
+        headers={"Authorization": f"Bearer {token}"},
         data={"assignment_name": "Week 1", "rubric_id": "r1"},
-        files={"file": ("app.js", sample_js_code, "text/javascript")}
+        files={"file": ("app.js", b"const x = 1;", "text/javascript")}
     )
-    assert r.status_code == 422
+    assert r.status_code == 403
 
 
 # TC-043
@@ -95,7 +117,8 @@ def test_get_report_not_found_returns_404(client):
 
 # TC-044
 def test_get_rubrics_returns_list(client):
-    r = client.get("/api/v1/rubrics")
+    token = _teacher_token()
+    r = client.get("/api/v1/rubrics", headers={"Authorization": f"Bearer {token}"})
     assert r.status_code == 200
     assert isinstance(r.json(), list)
 
@@ -108,7 +131,8 @@ def test_health_has_version(client):
 
 
 def test_dashboard_returns_stats(client):
-    r = client.get("/api/v1/dashboard/SMIT-Batch-42")
+    token = _teacher_token()
+    r = client.get("/api/v1/dashboard/SMIT-Batch-42", headers={"Authorization": f"Bearer {token}"})
     assert r.status_code == 200
     data = r.json()
     assert "batch" in data
@@ -119,8 +143,10 @@ def test_dashboard_returns_stats(client):
 
 
 def test_create_rubric(client):
+    token = _teacher_token()
     r = client.post(
         "/api/v1/rubrics",
+        headers={"Authorization": f"Bearer {token}"},
         json={
             "name": "Test Rubric",
             "language": "javascript",
@@ -136,8 +162,10 @@ def test_create_rubric(client):
 
 
 def test_create_rubric_then_list(client):
+    token = _teacher_token()
     client.post(
         "/api/v1/rubrics",
+        headers={"Authorization": f"Bearer {token}"},
         json={
             "name": "List Test",
             "language": "python",
@@ -146,7 +174,7 @@ def test_create_rubric_then_list(client):
             "created_by": "admin",
         },
     )
-    r = client.get("/api/v1/rubrics")
+    r = client.get("/api/v1/rubrics", headers={"Authorization": f"Bearer {token}"})
     assert r.status_code == 200
     names = [rb["assignment_name"] for rb in r.json()]
     assert "List Test" in names
@@ -155,7 +183,8 @@ def test_create_rubric_then_list(client):
 # ── Coverage boosters: reports endpoints ──
 
 def test_history_empty_student(client):
-    r = client.get(f"/api/v1/history/{uuid4()}")
+    token = _teacher_token()
+    r = client.get(f"/api/v1/history/{uuid4()}", headers={"Authorization": f"Bearer {token}"})
     assert r.status_code == 200
     assert isinstance(r.json(), list)
 
