@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import type { ReactNode } from "next";
+import type { ReactNode } from "react";
 import { Audiowide, Rajdhani, Orbitron, Michroma, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { Providers } from "./Providers";
@@ -44,6 +44,9 @@ const jetbrainsMono = JetBrains_Mono({
 export const metadata: Metadata = {
   title: "SYNAPSE AI TEACHING AGENT",
   description: "Agentic AI Teaching Assistant — Code Analysis & Feedback System",
+  icons: {
+    icon: "/images/favicon.png",
+  },
 };
 
 export default function RootLayout({

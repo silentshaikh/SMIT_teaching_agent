@@ -13,7 +13,7 @@ gsap.registerPlugin(ScrollTrigger);
 type MouseVec = { x: number; y: number };
 
 interface ParticleMesh extends THREE.Mesh {
-  userData: { speed: number; phase: number };
+  userData: { speed: number; phase: number; startX: number; startY: number; direction: THREE.Vector3 };
 }
 
 const SCREEN_MODES = ["terminal", "code", "status", "matrix", "analysis"] as const;
