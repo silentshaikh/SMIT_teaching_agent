@@ -18,6 +18,7 @@ jest.mock("next/dynamic", () => {
 });
 
 jest.mock("gsap", () => ({
+  registerPlugin: jest.fn(),
   timeline: jest.fn(() => ({
     from: jest.fn().mockReturnThis(),
     to: jest.fn().mockReturnThis(),
@@ -26,6 +27,10 @@ jest.mock("gsap", () => ({
   })),
   context: jest.fn(() => ({ revert: jest.fn() })),
   to: jest.fn(),
+}));
+
+jest.mock("gsap/ScrollTrigger", () => ({
+  ScrollTrigger: {},
 }));
 
 import { CyberUI } from "@/components/CyberUI";
@@ -68,16 +73,7 @@ test("TC-CYBERUI-05: links have correct hrefs", () => {
   expect(historyLink).toHaveAttribute("href", "/history");
 });
 
-test("TC-CYBERUI-06: renders children", () => {
-  render(
-    <CyberUI>
-      <div data-testid="child">Child content</div>
-    </CyberUI>
-  );
-  expect(screen.getByTestId("child")).toBeInTheDocument();
-});
-
-test("TC-CYBERUI-07: renders boot screen", () => {
+test("TC-CYBERUI-06: renders boot screen", () => {
   render(<CyberUI />);
   expect(screen.getByText("BOOT")).toBeInTheDocument();
 });

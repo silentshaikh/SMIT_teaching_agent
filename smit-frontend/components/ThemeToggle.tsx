@@ -6,7 +6,7 @@ type Theme = "dark" | "light";
 
 const THEMES: Record<Theme, { bg: string; next: Theme; label: string }> = {
   dark: { bg: "#0a0a0a", next: "light", label: "DARK" },
-  light: { bg: "#DFFFFD", next: "dark", label: "LIGHT" },
+  light: { bg: "#E8FFFE", next: "dark", label: "LIGHT" },
 };
 
 export function ThemeToggle() {
@@ -69,11 +69,12 @@ export function ThemeToggle() {
       onClick={handleToggle}
       data-magnetic="true"
       aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
-      className="relative flex items-center gap-0 p-0 border border-white/15 rounded-full cursor-pointer hover:border-cyber-green/40 transition-colors duration-300 outline-none focus-visible:ring-2 focus-visible:ring-cyber-green overflow-hidden"
+      className="relative flex items-center gap-0 p-0 border rounded-full cursor-pointer transition-colors duration-300 outline-none focus-visible:ring-2 focus-visible:ring-cyber-green overflow-hidden"
       style={{
         width: 92,
         height: 32,
-        background: "rgba(255,255,255,0.05)",
+        background: theme === "light" ? "rgba(0,31,26,0.06)" : "rgba(255,255,255,0.05)",
+        borderColor: theme === "light" ? "rgba(0,122,106,0.2)" : "rgba(255,255,255,0.15)",
         backdropFilter: "blur(8px)",
       }}
     >
@@ -121,7 +122,7 @@ export function ThemeToggle() {
             height="14"
             viewBox="0 0 24 24"
             fill="none"
-            stroke={theme === "dark" ? "#00FF66" : "rgba(255,255,255,0.3)"}
+            stroke={theme === "dark" ? "#00FF66" : "rgba(0,122,106,0.4)"}
             strokeWidth="2"
             strokeLinecap="round"
             strokeLinejoin="round"

@@ -51,7 +51,7 @@ jest.mock("three", () => {
     Color: jest.fn(() => ({})),
     Vector2: jest.fn(() => ({})),
     Vector3: jest.fn(function (x?: number, y?: number, z?: number) {
-      const o = { x: x || 0, y: y || 0, z: z || 0 };
+      const o: Record<string, unknown> = { x: x || 0, y: y || 0, z: z || 0 };
       o.clone = jest.fn(() => ({ ...o, multiplyScalar: jest.fn(() => ({ ...o })), copy: jest.fn(), normalize: jest.fn(() => o) }));
       o.copy = jest.fn(() => o);
       o.normalize = jest.fn(() => o);

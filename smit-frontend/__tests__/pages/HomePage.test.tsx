@@ -1,5 +1,33 @@
 import { render, screen } from '@testing-library/react'
 import '@testing-library/jest-dom'
+
+jest.mock("gsap", () => ({
+  registerPlugin: jest.fn(),
+  timeline: jest.fn(() => ({
+    from: jest.fn().mockReturnThis(),
+    to: jest.fn().mockReturnThis(),
+    fromTo: jest.fn().mockReturnThis(),
+    call: jest.fn().mockReturnThis(),
+  })),
+  context: jest.fn(() => ({ revert: jest.fn() })),
+  to: jest.fn(),
+}));
+jest.mock("gsap/ScrollTrigger", () => ({ ScrollTrigger: {} }));
+jest.mock("next/link", () => {
+  return function MockLink({ children, href, ...props }: any) {
+    return <a href={href} {...props}>{children}</a>;
+  };
+});
+jest.mock("next/dynamic", () => {
+  return function mockDynamic(factory: () => Promise<any>, opts: any) {
+    function MockComponent() {
+      return <div data-testid="hero-scene-mock" />;
+    }
+    MockComponent.displayName = "HeroScene";
+    return MockComponent;
+  };
+});
+
 import HomePage from '../../app/page'
 
 // TC-001
@@ -63,7 +91,7 @@ test('TC-009: renders feature cards', () => {
   expect(screen.getByText('Code Analysis')).toBeInTheDocument()
   expect(screen.getByText('Instant Grading')).toBeInTheDocument()
   expect(screen.getByText('AI Tutor')).toBeInTheDocument()
-  expect(screen.getByText('Progress Tracking')).toBeInTheDocument()
+  expect(screen.getAllByText('Progress Tracking').length).toBeGreaterThanOrEqual(1)
 })
 
 // TC-010

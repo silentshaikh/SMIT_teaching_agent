@@ -701,6 +701,31 @@ label  { font-size: var(--text-sm);  font-weight: 500; color: var(--color-text-p
 [data-theme="light"] .hover\:text-white\/60:hover { color: rgba(0, 31, 26, 0.80) !important; }
 [data-theme="light"] .hover\:bg-white\/5:hover { background-color: rgba(0, 122, 106, 0.12) !important; }
 
+/* Hide scanline overlay in light mode */
+[data-theme="light"] .cyber-scanline::after { display: none; }
+
+/* Light mode overrides for hardcoded dark classes */
+[data-theme="light"] .bg-\[#060b18\] { background-color: #E8FFFE !important; }
+[data-theme="light"] .bg-\[#0a0a0a\] { background-color: #E8FFFE !important; }
+
+/* Hologram panel/card light mode */
+[data-theme="light"] .hologram-panel {
+  background: rgba(0, 31, 26, 0.04) !important;
+  border: 1px solid rgba(0, 122, 106, 0.12) !important;
+  box-shadow: 0 8px 32px rgba(0, 31, 26, 0.06) !important;
+  backdrop-filter: blur(12px) !important;
+}
+[data-theme="light"] .hologram-panel::before {
+  background: linear-gradient(90deg, transparent, rgba(0, 122, 106, 0.15), transparent) !important;
+}
+[data-theme="light"] .hologram-card {
+  background: rgba(0, 31, 26, 0.03) !important;
+  border: 1px solid rgba(0, 122, 106, 0.08) !important;
+}
+[data-theme="light"] .hologram-card::before {
+  background: linear-gradient(90deg, transparent, rgba(0, 122, 106, 0.12), transparent) !important;
+}
+
 /* ── Light mode hero overrides ──────────────────── */
 
 [data-theme="light"] .hero-eyebrow {
@@ -793,4 +818,93 @@ label  { font-size: var(--text-sm);  font-weight: 500; color: var(--color-text-p
 
 [data-theme="light"] .stat-label {
   color: rgba(0, 31, 26, 0.7);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   Hologram Panel — glass morphism for below-fold sections
+   (NOT cyber-panel — this is a separate design language)
+   ═══════════════════════════════════════════════════════════ */
+
+.hologram-panel {
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 1.5rem;
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  position: relative;
+  overflow: hidden;
+}
+
+.hologram-panel::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(0, 255, 200, 0.15), transparent);
+  pointer-events: none;
+}
+
+.hologram-card {
+  position: relative;
+  overflow: hidden;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   Shimmer animation for carousel progress bars
+   ═══════════════════════════════════════════════════════════ */
+
+@keyframes shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(200%); }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   prefers-reduced-motion — calmer variant, NOT blank
+   ═══════════════════════════════════════════════════════════ */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  /* Keep spin for boot but slower */
+  [style*="spin 2s"] {
+    animation: spin 8s linear infinite !important;
+  }
+
+  /* Particles stay visible but static */
+  canvas {
+    opacity: 0.3 !important;
+  }
+
+  /* Robot scene visible but no animation */
+  .robot-hero-scene canvas {
+    opacity: 0.5 !important;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   Mobile fallback — lighter version for small viewports
+   ═══════════════════════════════════════════════════════════ */
+
+@media (max-width: 767px) {
+  .hologram-panel {
+    border-radius: 1rem;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+  }
+
+  .hologram-card {
+    border-radius: 1rem;
+  }
 }
